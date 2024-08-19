@@ -1,4 +1,5 @@
 <script lang="ts">
+    export const prerender = false;
   import { invoke } from "@tauri-apps/api/tauri";
   import { appWindow } from '@tauri-apps/api/window';
   import Node from '../components/Node.svelte'
@@ -123,6 +124,7 @@ setWindowTitle('current_project.nvl*');
 //types include dialogue, transition, choice and action
 
 let mms = [{
+    scene: "main_menu",
    type: "",
    character: "",
    text: "Execute. ",
@@ -133,6 +135,7 @@ let mms = [{
 ]
 
   let script_code = [{
+    scene: "city",
    type: "dialogue",
    character: "0000",
    text: "Hello.",
@@ -141,28 +144,20 @@ let mms = [{
    y: 20,
   },
 {
-type: "choice",
+    scene: "city",
+type: "dialogue",
  character: "0000",
  text: "What would you like to eat?",
- options: ['test', 'test2'],
+ options: [''],
  x: 3,
  y: 20,
 },
 ]
 
-let script_code2 = [{
-   type: "dialogue",
-   character: "0000",
-   text: "Hello.",
-   options: ['test'],
-   x: 0,
-   y: 20,
-  },
-]
 
 
 
-let scene_nodes = [mms, script_code, script_code2]
+let scene_nodes = [mms, script_code]
 //open add node modal
 function addNode(){
 action = "adding_node";
@@ -231,7 +226,7 @@ function confirmEditNode(character, type, text) {
 function confirmNode(character, type, text) {
 
     let thisType = '';
-let actionArray = []
+let actionArray: any = []
         switch (type) {
             case "Dialogue":
                 thisType = "dialogue";
@@ -245,6 +240,7 @@ let actionArray = []
         }
 
         const node = {
+            scene: scenes[seeing].title,
             type: thisType,
             character: character,
             text: text,

@@ -42,6 +42,15 @@ for(var t = 0; t < text.length; t++ ){
   
 }
 }
+var all_nodes = []
+for(var n = 0; n < scene_nodes.length; n++ ){
+      
+    all_nodes.push(scene_nodes[n]);
+    console.log(all_nodes)
+
+}
+
+
 
 
           //add the text data
@@ -49,7 +58,23 @@ for(var t = 0; t < text.length; t++ ){
         for(var j = 0; j < main_menu_info.items.length; j++){
         source_code = source_code + "\n" + `${scenes[i].title}.write -> '${main_menu_info.items[j]}'` + `, x: ${main_menu_info.slide_from}, y: ${main_menu_info.start_at + j * 100}, color: ${main_menu_info.color}, size: ${main_menu_info.font_size - 10}; \n` ;
         }
-     
+        for (var i = 0; i < all_nodes.length; i++) {
+          var node = all_nodes[i];
+          for (var j = 0; j < node.length; j++) {
+              var obj = node[j];
+
+              if(obj.scene == scenes[i].title && obj.scene != 'main_menu'){
+                if(obj.type == "dialogue"){
+                source_code = source_code + "\n" + `${obj.scene}.say -> '${obj.text}', who: ${obj.character}; \n` ;
+                }
+                if(obj.type == "choice"){
+                  source_code = source_code + "\n" + `${obj.scene}.ask -> '${obj.text}'; \n` ;
+                  }
+              }
+          }
+        }
+        
+        
    
   
 }
