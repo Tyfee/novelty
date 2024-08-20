@@ -1,12 +1,13 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
   import { Button, Card, Group, Image, Text, Badge } from "@svelteuidev/core";
-  import bg00 from './../assets/bg/4258797.jpg'
-    import bg01 from './../assets/bg/bg01.jpg'
+  import bg00 from '../assets/bg/4258797.jpg'
+    import bg01 from '../assets/bg/bg01.jpg'
     import { goto } from "$app/navigation";
 import Create_Project from './components/Create_Project.svelte';
 import Settings from "./components/Settings.svelte";
     import { onMount } from "svelte";
+    import logo from '../assets/novelty_logo.png'
 
 
 function navigate(project_name: string){
@@ -149,7 +150,12 @@ function startProject(name: any){
 </div>
 
 <div class="logo_container">
-<img alt="logo" class="logo" src="logo.png"/>
+<img alt="logo" class="logo" src={logo}/>
+<div>
+<strong>V.0.01</strong>
+<p>
+<a style="font-weight: bold;" href="https://novelty.tyfee.top/v001/changelog.html">Read Changelog</a></p>
+</div>
 </div>
 
 </div>
@@ -209,7 +215,9 @@ overflow: hidden;
   position: absolute;
   z-index: 3;
   left: 0;
-  bottom: 0;
+  bottom: -20px;
+  display: flex;
+  align-items: end;
 }
   .logo {
     height: 6em;

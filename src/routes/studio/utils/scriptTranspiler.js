@@ -27,8 +27,9 @@ audio.map((i) => source_code = source_code + "audio " + i.title + ";\n");
 for(var i = 0; i < scenes.length; i++){
 
           //add the main_menu logo data:
-          source_code = source_code + "\n" + `${scenes[i].title}.draw_background -> src: '${scenes[i].bg}'; \n`
-       
+          for(var s = 0; s < scenes.length; s++){
+          source_code = source_code + "\n" + `${scenes[s].title}.draw_background -> src: '${scenes[s].bg}'; \n`
+          }
           for(var h = 0; h < assets.length; h++ ){
             if(assets[h].scene == scenes[i].title){
           source_code = source_code + "\n" + `${scenes[i].title}.draw -> src: ${assets[h].title }, x: ${assets[h].x}, y: ${assets[h].y / 2}, width: ${assets[h].width * 2}, height: ${assets[h].height * 2}; \n`

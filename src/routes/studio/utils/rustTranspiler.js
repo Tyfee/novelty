@@ -25,21 +25,26 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+
+
+
+        clear_background(LIGHTGRAY);
 `
 // this will hold the texture loading methods;
 var user_define = ""
 
 
 var default_code = `loop {
-       let (mouse_x, mouse_y) = mouse_position();
+
         clear_background(LIGHTGRAY);
+       let (mouse_x, mouse_y) = mouse_position();
       `
       // this is where the rendering process and the user events will happen
 var user_loop = ""
 
 //this will come at the end of every file
-var closing = `next_frame().await
-    }
+var closing = `\n\n next_frame().await
+}
 }`
 //read the passed code parameter line by line and turn each sentence into a full rust code
 var parsed = script.split('\n')
@@ -67,6 +72,9 @@ fn window_conf() -> Conf {
 
   #[macroquad::main(window_conf)]
   async fn main() {
+  
+  
+        clear_background(LIGHTGRAY);
   `
 
 }
@@ -79,34 +87,26 @@ if(parsed[i].includes("scene")){
 user_define = user_define + `
 \nlet ${thisLine[1]}: Texture2D = load_texture(\"assets/scenes/${thisLine[1]}.png\").await.unwrap();
 
-\nlet ${thisLine[1]}_index = 0;`
+\nlet mut ${thisLine[1]}_index = 0;`
 }
 console.log("all theh scenes: "+ total_scenes)
 
  if (parsed[i].includes(".say ->")) {
-    let preparse = parsed[i];  // Directly use parsed[i] as the current line
-    let semiparse = preparse.replace('.say ->', '').trim();  // Clean the line
-    let full_parse = semiparse.split("'");  // Split into scene name and text
+    let preparse = parsed[i];  
+    let semiparse = preparse.replace('.say ->', '').trim(); 
+    let full_parse = semiparse.split("'"); 
     
-    // Check if we have at least two elements (scene name and text)
     if (full_parse.length >= 2) {
-      let scene_name = full_parse[0].trim();  // Scene name
-      let text = full_parse[1].trim();  // Text associated with the scene
+      let scene_name = full_parse[0].trim();  
+      let text = full_parse[1].trim();  
       
-      // Remove any trailing periods or unwanted characters from scene_name
-      scene_name = scene_name.replace(/[^\w\s]/g, '');  // Remove non-word characters
+      scene_name = scene_name.replace(/[^\w\s]/g, '');  
       
-      // Debugging
-      console.log(`Processing line: ${parsed[i]}`);
-      console.log(`Extracted scene name: '${scene_name}'`);
-      console.log(`Extracted text: '${text}'`);
       
-      // Initialize scene_name entry if not already present
       if (!scene_data[scene_name]) {
-        scene_data[scene_name] = [];  // Initialize array for the scene
+        scene_data[scene_name] = []; 
       }
       
-      // Add the text to the corresponding scene array
       scene_data[scene_name].push(text);
     } else {
       console.warn('Invalid line format:', parsed[i]);
@@ -155,7 +155,7 @@ console.log("all theh scenes: "+ total_scenes)
   if(total_images.length > 0){
   user_define = user_define + `\nlet images = [${total_images}]; \n`
   }
-  user_define = user_define + `\nlet current_scene = 0; \n`
+  user_define = user_define + `\nlet mut current_scene = 0; \n`
   
   
   
@@ -167,8 +167,21 @@ console.log("all theh scenes: "+ total_scenes)
   for(var i = 0; i < total_scenes.length; i++){
   user_loop = user_loop + `\nif current_scene == ${i} {`
   
+  user_loop = user_loop + `\nif is_key_down(KeyCode::Right) {\n  
+        
+        current_scene = 1;
+
+        \n}`
+
+        if(i != 0){
+          user_loop = user_loop + `\nif is_key_pressed(KeyCode::Space) &&  ${total_scenes[i]}_index < ${total_scenes[i]}_nodes.len() {
+          \n
+        ${total_scenes[i]}_index += 1;
   
-  //check for functions corresponding to the current scene
+          \n}`
+        }
+  
+        //check for functions corresponding to the current scene
   for(var j = 0; j < functions.length; j++){
     console.log(functions[j])
     //if found use if/else to define what to do at what function 'draw', 'draw_background', 'write', 'etc'
@@ -199,16 +212,20 @@ console.log("all theh scenes: "+ total_scenes)
             dest_size: Some(vec2(${parsed_w[1]}.0, ${parsed_h[1]}.0)),
             ..Default::default()
           },); \n` }
+        
       else if (functions[j].method.trim() == "say" && !hasDialog){
         
         var parsed_text_params = functions[j].params.trim().replace(/'/g, ' ').split(',');
-            user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_nodes[${total_scenes[i]}_index], 100.0, 100.0, 32.0, WHITE);`
+           
+        user_loop = user_loop + `\n draw_rectangle(20.0, screen_height() / 1.6, screen_width() / 1.05, screen_height() / 3.0, PINK);\n`;
+        user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_nodes[${total_scenes[i]}_index], 50.0, screen_height() / 1.4, (screen_width() * screen_height()) / 14000.0, BLACK);`
   
      hasDialog = true;
           }
+          
     }
   }
-  
+  user_loop = user_loop + "\n }"
 
 }
 
@@ -216,20 +233,14 @@ for (let i = 0; i < total_scenes.length; i++) {
   let scene_name = total_scenes[i];  
   let texts = scene_data[scene_name] || [];  
   
-  console.log(`Generating Rust code for scene: ${scene_name}`);
-  console.log(`Texts for ${scene_name}:`, texts);
-
-
 let formatted_texts = texts.map(text => `"${text.replace(/"/g, '\\"')}".to_string()`).join(", ");
 
-  console.log(`Formatted texts for ${scene_name}: ${formatted_texts}`);
-  
+
   let array_declaration = `let ${scene_name}_nodes: Vec<String> = vec![${formatted_texts}];\n`;
 
   user_define += array_declaration;
 
 
-user_loop = user_loop + "\n}"
 
 }
 var full_code = header + user_define + default_code + user_loop + closing; 

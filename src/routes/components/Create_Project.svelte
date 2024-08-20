@@ -6,6 +6,7 @@
     import { Label } from '@smui/common';
     let current_template = 0;
     let current_logo = logo;
+    let targeted = ['win']
         let value: any;
         let text: string = '';
         let action_type: any = "Dialogue";
@@ -18,7 +19,7 @@
         }
       </script>
       
-      <div class="modal">
+      <div style="overflow-x: hidden;" class="modal">
         <div class="title-bar">
           <h1>Create New Project</h1>
           <button on:click={onClose}>&times;</button>
@@ -47,13 +48,21 @@
             bind:value={text}
           />
         </div>
+        <p></p>
+        <TextInput
+        style="width: 100%;"
+         placeholder="What is your new game about?"
+         label="Project description"
+         bind:value={text}
+       />
+
          
 
           <p>
 <CheckboxGroup
 label="Targeted Platforms"
 items={[{label: "Windows", value: "win"}, {label: "Linux", value: "gnu"},{label: "MacOS", value: "mac"},{label: "Mobile", value: "app"}, {label: "Browser", value: "wasm"}]}
-
+bind:value={targeted}
 />
             </p>
         </div>
