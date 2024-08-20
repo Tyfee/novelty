@@ -1,6 +1,14 @@
 # IN CONSTRUCTION
 
-Novelty is a hobby project of mine, it's something i've been meaning to create for a long time and i'm also using it for the sake of learning Rust and how to manage bigger project.
+Novelty is a hobby project of mine, it's something i've been meaning to create for a long time and also an excuse to try Rust. 
+I also just want to see how to manage a bigger game related project.
+
+Up until this point all the program can do is:
+
+- Run on Windows
+- Create/Open Projects
+- Convert scenes and nodes information into visual information with macroquad
+- Handle basic input events
 
 Be warned that this repository contains ugly, non-functional and or inefficient code!
 
