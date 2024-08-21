@@ -9,6 +9,7 @@ Up until this point all the program can do is:
 - Create/Open Projects
 - Convert scenes and nodes information into visual information with macroquad
 - Handle basic input events
+- Compile the games into executables
 
 Be warned that this repository contains ugly, non-functional and or inefficient code!
 
