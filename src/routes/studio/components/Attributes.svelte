@@ -13,13 +13,16 @@ export let menu_padding_left: any;
 export let menu_button_size: any;
 export let menu_button_color: any;
 export let images: Array<string>;
+export let audio: Array<any>;
 export let current_logo: string;
 export let scenes: any;
 export let seeing: any; 
 export let logo_x: any;
 export let logo_y: any;
 export let current_bg: string;
-
+export let onUpdateBg: any;
+export let hasBgm: boolean;
+let mapped_audio = audio.map((i) => i.file)
 let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
 </script>
 <div class="assets attributes">
@@ -154,9 +157,25 @@ placeholder="Something like 'garden', 'Outside' or 'MOON';"
   <NativeSelect data={images} 
   placeholder="Logo Image"
   bind:value={current_bg}
+  on:change={onUpdateBg(current_bg)}
   label="Scene Background"
  />
 
+ <p></p>
+ <Checkbox
+  color="black"
+   label="Background Music" 
+   bind:checked={hasBgm}
+   />
+
+   <p></p>
+   {#if hasBgm}
+ <NativeSelect 
+ data={mapped_audio}
+bind:value={scenes[seeing].bgm}
+ />
+
+{/if}
  </Accordion.Item>
 
  </Accordion>

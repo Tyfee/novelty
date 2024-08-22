@@ -18,13 +18,25 @@ menu_info = main_menu_info;
 // turn every scene into a variable;
 //ex scene.name = "scene 1" becomes "scene scene_1;"
 scenes.map((i) => source_code = source_code + "scene " + i.title + ";\n");
+scenes.map((i) => source_code = source_code + "bg " + `'${i.bg}'` + ";\n");
 source_code = source_code + "\n";
 characters.map((i) => source_code = source_code + "char " + i.name + ";\n");
+source_code = source_code + "\n";
 assets.map((i) => source_code = source_code + "img " + i.title + ";\n");
+
 audio.map((i) => source_code = source_code + "audio " + i.title + ";\n");
 
 //ad
 for(var i = 0; i < scenes.length; i++){
+
+
+//music stuff
+for(var m = 0; m < scenes.length; m++){
+  if(scenes[m].bgm != 'none'){
+  source_code = source_code + "\n" + `${scenes[m].title}.play_bgm -> '${scenes[m].bgm}'; \n`
+  }}
+
+
 
           //add the main_menu logo data:
           for(var s = 0; s < scenes.length; s++){
@@ -66,7 +78,7 @@ for(var n = 0; n < scene_nodes.length; n++ ){
 
               if(obj.scene == scenes[i].title && obj.scene != 'main_menu'){
                 if(obj.type == "dialogue"){
-                source_code = source_code + "\n" + `${obj.scene}.say -> '${obj.text}', who: ${obj.character}; \n` ;
+                source_code = source_code + "\n" + `${obj.scene}.say -> '${obj.text}', who: ${obj.character}, pose: ${obj.mood}; \n` ;
                 }
                 if(obj.type == "choice"){
                   source_code = source_code + "\n" + `${obj.scene}.ask -> '${obj.text}'; \n` ;

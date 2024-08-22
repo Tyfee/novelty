@@ -1,8 +1,8 @@
 <script lang="ts">
     import { NativeSelect, Text, Textarea, Button, TextInput } from '@svelteuidev/core';
-
+import neutral_pose from '../../../assets/chars/neutral00.png'
 export let onAddPose;
-export let poses;
+let poses = ['neutral'];
 let value: any;
 let text: string = '';
 export let onClose: any;
@@ -11,7 +11,7 @@ let selected = 0;
 </script>
 
 
-<div>
+<div style="width: 100%">
 <div class="modal">
 <TextInput
 placeholder="Something like John, Itoshiki Nozomu or R2-D2;"
@@ -21,10 +21,11 @@ bind:value={text}
 <h5>Poses (Maximum of 5 .png** files)</h5>
 {#each poses as bg, index}
 <div style="display: flex; width: 60vw !important;">
-<img style="cursor: pointer; border: {index == selected? "2px solid green" : "none"}" on:click={() => selected = index} width="160px" alt="Background Image" src={bg}/>
+<img style="cursor: pointer; border: {index == selected? "2px solid green" : "none"}" on:click={() => selected = index} width="160px" alt="Background Image" src={neutral_pose}/>
 <TextInput
 placeholder="Something like 'Neutral', Angry or Sad;"
 label="Pose title"
+value={bg}
 />
 </div>
 {/each}

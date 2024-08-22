@@ -34,9 +34,14 @@ import build from "../utils/build";
     const all_scenes = [bg00, bg01]
    let code: string;
   $: scenes = [
-    {title: "main_menu", bg: bg00, id: 0},
-   {title: "city", bg: bg01, id: 1}
+    {title: "main_menu", bg: bg00, id: 0, bgm: 'love'},
+   {title: "city", bg: bg01, id: 1, bgm: 'none'}
 ];
+
+function updateCurrentBg(newBg: any){
+ scenes[seeing].bg = newBg;
+ scenes = [...scenes];
+}
 
   let images = [bg00, bg01, logo];
    let fonts = ["font.ttf", "font2.ttf"]
@@ -45,7 +50,7 @@ import build from "../utils/build";
 
 $: assets = [
 /*    {
-    scene: "main_menu",
+    src: "main_menu",
     title: "logo",
     src: `'${game_logo}'`,
     x: 100,
@@ -64,9 +69,9 @@ $: assets = [
     file: "love.wav"
 }]
   let characters = [
-    {name: "me", id: "0000"}, 
-    {name: "Dude", id: "0001", poses: [neutral00]}, 
-    {name: "Guy", id: "0001", poses: [neutral00]}
+    {name: "me", id: "0000", poses: null}, 
+    {name: "Dude", id: "0001", poses: ['neutral', 'sad']}, 
+    {name: "Guy", id: "0001", poses: ['neutral']}
 ]
   $: seeing = 0;
   let display = 0;
@@ -79,7 +84,7 @@ $: assets = [
   $: balloon_style.color = `${balloon_color}`
 let project_name: string;
 
-  // Or use $page store if you need reactive access to the whole page object
+
   $: {
     const { params } = $page;
     console.log(params.slug);
@@ -131,26 +136,29 @@ let mms = [{
    options: [''],
    x: 20,
    y: 20,
+   mood: null
   }
 ]
 
   let script_code = [{
     scene: "city",
    type: "dialogue",
-   character: "0000",
+   character: "Guy",
    text: "Hello.",
    options: [''],
    x: 0,
    y: 20,
+   mood: 'neutral'
   },
 {
     scene: "city",
 type: "dialogue",
- character: "0000",
+ character: "Dude",
  text: "What would you like to eat?",
  options: [''],
  x: 3,
  y: 20,
+ mood: 'neutral'
 },
 ]
 
@@ -169,7 +177,8 @@ function confirmScene(text: string, background: any){
     const new_scene = {
         title: text,
         bg: background,
-        id: Math.floor(Math.random() * 539)
+        id: Math.floor(Math.random() * 539),
+        bgm: 'none'
     }
     scenes = [...scenes, new_scene]
 action = null;
@@ -223,7 +232,7 @@ function confirmEditNode(character, type, text) {
 
 // add new modal to array
 
-function confirmNode(character, type, text) {
+function confirmNode(character, type, text, pose) {
 
     let thisType = '';
 let actionArray: any = []
@@ -246,7 +255,8 @@ let actionArray: any = []
             text: text,
             options: actionArray,
             x: (2 * (characters.length + 1)), 
-            y: 20
+            y: 20,
+            mood: pose
         };
 
         console.log('Adding node:', node);
@@ -311,10 +321,7 @@ function selectToolbarOption(bundle: any, index: any){
     display = value;
 
   }
-  function findCharacter(codeCharacter: any) {
-    const character = characters.find(character => character.id === codeCharacter);
-    return character ? character.name : "Unknown";
-    }
+
 
 
     function handleNodeClick(index: number) {
@@ -342,7 +349,7 @@ function selectToolbarOption(bundle: any, index: any){
 <AddScene onConfirm={confirmScene} onClose={() => action = null} available_bg={all_scenes}/>
 {/if}
 {#if action == "adding_character"}
-<AddCharacter onConfirm={confirmScene} onClose={() => action = null} poses={all_scenes}/>
+<AddCharacter onConfirm={confirmScene} onClose={() => action = null}/>
 {/if}
 {#if action == "adding_text"}
 <AddText onConfirm={confirmText} onClose={() => action = null}/>
@@ -350,7 +357,7 @@ function selectToolbarOption(bundle: any, index: any){
 <div class="main_container">
    <div class="left_container"> 
  <Assets fonts={fonts} images={assets} scenes={scenes} audio={audio} characters={characters}/>
-<Attributes bind:logo_x={game_logo_xy.x} bind:logo_y={game_logo_xy.y} bind:seeing={seeing} bind:scenes={scenes} bind:current_bg={scenes[seeing].bg} bind:current_logo={game_logo} images={images} bind:menu_buttons={menu_buttons} bind:menu_button_color={menu_button_color} bind:menu_button_size={menu_button_size} currently_inspecting={currently_inspecting} items={items} bind:balloon_bg={balloon_bg} bind:balloon_border={balloon_border} bind:balloon_color={balloon_color} bind:menu_padding_left={menu_padding_left} bind:menu_padding_top={menu_padding_top}/>
+<Attributes hasBgm={scenes[seeing].bgm != "none"? true : false} audio={audio} onUpdateBg={updateCurrentBg} bind:logo_x={game_logo_xy.x} bind:logo_y={game_logo_xy.y} bind:seeing={seeing} bind:scenes={scenes} bind:current_bg={scenes[seeing].bg} bind:current_logo={game_logo} images={images} bind:menu_buttons={menu_buttons} bind:menu_button_color={menu_button_color} bind:menu_button_size={menu_button_size} currently_inspecting={currently_inspecting} items={items} bind:balloon_bg={balloon_bg} bind:balloon_border={balloon_border} bind:balloon_color={balloon_color} bind:menu_padding_left={menu_padding_left} bind:menu_padding_top={menu_padding_top}/>
 </div>
     <div class="right_container">
         <div class="switch">
@@ -384,7 +391,7 @@ function selectToolbarOption(bundle: any, index: any){
     
 {#if seeing != 0}
 
-<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={characters[1].poses[0]}/>
+<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={neutral00}/>
 
 <div on:click={() => currently_inspecting = 1} style="background-color: {balloon_style.bg}; border: {balloon_style.border}" class="balloon">
 <div style="background-color: rgba(0,0,0,0.7);">Character Name</div>
@@ -422,7 +429,7 @@ function selectToolbarOption(bundle: any, index: any){
    
     {#if current_scene_nodes}
     {#each current_scene_nodes as code, index}
-        <Node onEdit={() => {action = "editing_node"; current_editing_node= code; current_editing_node= index;}} onNodeClick={ handleNodeClick(index * 20)} x={code.x} y={code.y} prop1={code.text} prop2={findCharacter(code.character)} prop3={code.type} prop4={code.options}/>
+        <Node onEdit={() => {action = "editing_node"; current_editing_node= code; current_editing_node= index;}} onNodeClick={ handleNodeClick(index * 20)} x={code.x} y={code.y} prop1={code.text} prop2={`${code.character}, ${code.mood}`} prop3={code.type} prop4={code.options}/>
     {/each}
 {/if}
 <div style="position: absolute;bottom: 30vh; width: 61%; height: 10%;"><strong style="color: white">

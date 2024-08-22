@@ -7,6 +7,8 @@ use tokio::fs::write;
 use tokio::fs as tokio_fs;
 use tokio::runtime::Runtime;
 use std::path::PathBuf;
+use chrono::prelude::*;
+
 
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #[cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
@@ -27,18 +29,30 @@ async fn create_project(path: String, name: String) -> Result<(), String> {
         .map_err(|e| format!("Failed to create directory: {}", e))?;
     println!("Created project directory at: {:?}", project_path);
     let file_path = project_path.join("project.nvl");
-    let file_content: String = format!("{{ name: \"{}\" }}", name);
+    
+    let now: DateTime<Utc> = Utc::now();
+    let file_content: String = format!(
+        "name: {}
+        date: {}
+        scenes:", name, now.format("%Y-%m-%d %H:%M:%S"));
     let cargo_toml = project_path.join("cargo.toml");
     let cargo_content = format!(
-        "[package] \nname = \"{}\" \nversion = \"0.1.0\" \nedition = \"2021\" \n\n[dependencies] \nmacroquad = \"0.4\"",
+        r#"[package]
+    name = "{}"
+    version = "0.1.0"
+    edition = "2021"
+    
+    [dependencies]
+    macroquad = {{ version = "0.4", features = ["audio"] }}
+    "#,
         name
-    ); let main_rs: PathBuf = project_path.join("src").join("main.rs");
+    );let main_rs: PathBuf = project_path.join("src").join("main.rs");
     let default_code = format!(
         "use macroquad::prelude::*; \n\n#[macroquad::main(\"{}\")] \nasync fn main() {{ \nloop {{ \nclear_background(LIGHTGRAY); \nnext_frame().await \n}} \n}}",
         name 
     );
  
-    write_file(file_path, "This is a test").await;
+    write_file(file_path, &file_content).await;
     write_file(cargo_toml, &cargo_content).await;
    
     tokio_fs::create_dir_all(&project_path.join("src"))

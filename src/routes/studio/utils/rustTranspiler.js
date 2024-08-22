@@ -5,14 +5,23 @@ script = script.replace(/;/g, '')
 var total_scenes = [];
 var total_images =[];
 var total_audio = [];
+var total_characters = [];
 var functions = [];
 var nodes = [];
 let scene_data = {}; 
+let character_data = {};
+let mood_data = {};
 //this is the default header for the code;
 var header = `
 use macroquad::prelude::*;
 \nuse macroquad::audio;
-\n 
+\n
+
+\nuse macroquad::audio::play_sound;
+
+
+\nuse macroquad::audio::PlaySoundParams;
+
 fn window_conf() -> Conf {
     Conf {
         window_title: ${game_name}.to_owned(),
@@ -33,6 +42,8 @@ async fn main() {
 // this will hold the texture loading methods;
 var user_define = ""
 
+
+user_define = user_define + `\n let mut music_playing = false;`
 
 var default_code = `loop {
 
@@ -60,6 +71,9 @@ if(parsed[i].includes("window_title")){
   header = `
   use macroquad::prelude::*;
   \nuse macroquad::audio;
+  \nuse macroquad::audio::play_sound;
+  
+\nuse macroquad::audio::PlaySoundParams;
 fn window_conf() -> Conf {
     Conf {
         window_title: ${game_name}.to_owned(),
@@ -89,6 +103,16 @@ user_define = user_define + `
 
 \nlet mut ${thisLine[1]}_index = 0;`
 }
+
+
+if(parsed[i].includes("char")){
+  total_characters.push(thisLine[1]);
+
+user_define = user_define + `
+\nlet ${thisLine[1]}: Texture2D = load_texture(\"assets/characters/${thisLine[1]}/neutral.png\").await.unwrap();
+`
+}
+
 console.log("all theh scenes: "+ total_scenes)
 
  if (parsed[i].includes(".say ->")) {
@@ -99,15 +123,22 @@ console.log("all theh scenes: "+ total_scenes)
     if (full_parse.length >= 2) {
       let scene_name = full_parse[0].trim();  
       let text = full_parse[1].trim();  
-      
-      scene_name = scene_name.replace(/[^\w\s]/g, '');  
+       console.log("indubitably")
+     let mood = full_parse[2].substring(1).trim().split(',')[1].split(':')[1]
+     let character = full_parse[2].substring(1).trim().split(',')[0].split(':')[1]
+   
+     scene_name = scene_name.replace(/[^\w\s]/g, '');  
       
       
       if (!scene_data[scene_name]) {
         scene_data[scene_name] = []; 
+        mood_data[scene_name] = [];
+        character_data[scene_name] = [];
       }
       
       scene_data[scene_name].push(text);
+      mood_data[scene_name].push(mood.trim())
+      character_data[scene_name].push(character.trim())
     } else {
       console.warn('Invalid line format:', parsed[i]);
     }
@@ -127,7 +158,7 @@ console.log("all theh scenes: "+ total_scenes)
     total_audio.push(thisLine[1]);
   
     
-  user_define = user_define + `\nlet ${thisLine[1]} = audio::load_sound(\"assets/audio/${thisLine[1]}.wav\").await.unwrap();\n`
+  user_define = user_define + `\nlet ${thisLine[1]} = audio::load_sound(\"assets/audio/${thisLine[1]}.ogg\").await.unwrap();\n`
   
   }
   
@@ -157,6 +188,9 @@ console.log("all theh scenes: "+ total_scenes)
   }
   user_define = user_define + `\nlet mut current_scene = 0; \n`
   
+  user_define = user_define + `\nlet mut whos_talking = "Guy"; \n`
+  
+  
   
   
   console.log(functions)
@@ -185,9 +219,26 @@ console.log("all theh scenes: "+ total_scenes)
   for(var j = 0; j < functions.length; j++){
     console.log(functions[j])
     //if found use if/else to define what to do at what function 'draw', 'draw_background', 'write', 'etc'
+  
     if(functions[j].scene == total_scenes[i]){
   console.log(functions[j].scene + " and " + total_scenes[i])
-      if (functions[j].method.trim() == "draw_background") {
+  
+   
+  if(functions[j].method.trim() == "play_bgm"){
+    console.log(functions[j].params + "playing")
+    user_loop = user_loop + `\n
+           if !music_playing {
+            play_sound(&${functions[j].params.replace(/'/g, '').trim()}, PlaySoundParams {
+                looped: true, // Ensure the music loops continuously
+                ..PlaySoundParams::default()
+            });
+            music_playing = true; // Update the flag to indicate music is playing
+        }
+
+  `
+  }
+
+  if (functions[j].method.trim() == "draw_background") {
         
         console.log("drawing_bg...")
         user_loop = user_loop + `\n \n draw_texture_ex(&scenes[${i}], 0., 0., WHITE,   DrawTextureParams {
@@ -214,9 +265,19 @@ console.log("all theh scenes: "+ total_scenes)
           },); \n` }
         
       else if (functions[j].method.trim() == "say" && !hasDialog){
-        
+        var who = functions[j].params.trim().split(', ')
+        var actually_Who = who[1].split(":")
+        console.log("this is who ")
+        console.log(actually_Who[1])
         var parsed_text_params = functions[j].params.trim().replace(/'/g, ' ').split(',');
-           
+        user_loop = user_loop + `\n \n draw_texture_ex(&${actually_Who[1]}, screen_width() / 1.7, screen_height() / 6.0, WHITE,   DrawTextureParams {
+          dest_size: Some(vec2(screen_width() / 2.2, screen_height() / 1.2)),
+          ..Default::default()
+        },); \n`  
+        user_loop = user_loop + `\n draw_rectangle(20.0, screen_height() / 1.8, screen_width() / 5.0, screen_height() / 6.0, Color::from_hex(0x380054));\n`;
+        user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_characters[${total_scenes[i]}_index], 50.0, screen_height() / 1.67, (screen_width() * screen_height()) / 15000.0, WHITE);`
+  
+
         user_loop = user_loop + `\n draw_rectangle(20.0, screen_height() / 1.6, screen_width() / 1.05, screen_height() / 3.0, PINK);\n`;
         user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_nodes[${total_scenes[i]}_index], 50.0, screen_height() / 1.4, (screen_width() * screen_height()) / 14000.0, BLACK);`
   
@@ -232,14 +293,22 @@ console.log("all theh scenes: "+ total_scenes)
 for (let i = 0; i < total_scenes.length; i++) {
   let scene_name = total_scenes[i];  
   let texts = scene_data[scene_name] || [];  
-  
+  let moods = mood_data[scene_name] || [];
+  let characters = character_data[scene_name] || [];
+
 let formatted_texts = texts.map(text => `"${text.replace(/"/g, '\\"')}".to_string()`).join(", ");
+let formatted_moods = moods.map(mood => `"${mood.replace(/"/g, '\\"')}".to_string()`).join(", ");
+let formatted_characters = characters.map(character => `"${character.replace(/"/g, '\\"')}".to_string()`).join(", ");
 
 
   let array_declaration = `let ${scene_name}_nodes: Vec<String> = vec![${formatted_texts}];\n`;
+  let mood_declaration = `let ${scene_name}_moods: Vec<String> = vec![${formatted_moods}];\n`;
+  let character_declaration = `let ${scene_name}_characters: Vec<String> = vec![${formatted_characters}];\n`;
 
   user_define += array_declaration;
-
+  
+  user_define += character_declaration;
+  user_define += mood_declaration;
 
 
 }

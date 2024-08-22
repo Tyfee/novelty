@@ -1,17 +1,24 @@
 <script lang="ts">
         import { NativeSelect, Text, Textarea, Button } from '@svelteuidev/core';
-export let available_characters;
+export let available_characters: any
 let value: any;
 let text: string = '';
 let text2: string = '';
 let action_type: any = "Dialogue";
+let pose: any = "Neutral"
+$: poses = ["Neutral"]
 export let onClose: any;
 export let onConfirm: any;
 
 
-let character_map = available_characters.map((i: any) => i.id);
+let character_map = available_characters.map((i: any) => i.name);
+let selected = character_map[0];
 
-let selected: any = character_map[0];
+function handleChange(){
+  var thisPoses = available_characters.find((i: any) => i.name == selected)
+  poses = thisPoses.poses
+  
+}
 
 
 </script>
@@ -20,17 +27,26 @@ let selected: any = character_map[0];
 <div>
 <div class="modal">
 <NativeSelect
+on:change={handleChange}
     data={character_map}
     bind:value={selected}
     label="Character"
 />
 <p>
-    <NativeSelect
+
+
+  <NativeSelect
+  data={poses}
+  bind:value={pose}
+  label="Pose"
+/>
+</p>
+<p>
+  <NativeSelect
     data={["Dialogue", "Multiple Choice", "Action"]}
     bind:value={action_type}
     label="Node Type"
 />
-
 </p>
 {#if action_type == "Dialogue"}
 <p></p>
@@ -71,7 +87,7 @@ bind:value={text}/>
 <Button on:click={onClose} style="width: 50%;" variant='gradient' gradient={{from: 'red', to: 'orange', deg: 60}}>
 	Discard 
 </Button>
-<Button  on:click={onConfirm(selected, action_type,text)} style="width: 50%;" variant='gradient' gradient={{from: 'teal', to: 'blue', deg: 60}}>
+<Button  on:click={onConfirm(selected, action_type,text, pose)} style="width: 50%;" variant='gradient' gradient={{from: 'teal', to: 'blue', deg: 60}}>
 	Add New Node
 </Button>
 </div>
