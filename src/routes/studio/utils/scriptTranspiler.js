@@ -1,7 +1,8 @@
 import transpileToRust from "./rustTranspiler";
 
 const transpileToScript = (project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio) => {
-
+console.log("text:: this is all the text i have affu: ")
+console.log(text)
 var source_code = `window_title "${project_name}";\n\n`;    
 var menu_info = [{
     items: [
@@ -50,10 +51,11 @@ for(var m = 0; m < scenes.length; m++){
 }
 
 for(var t = 0; t < text.length; t++ ){
-    if(text[t].scene == scenes[i].title){
+
   source_code = source_code + "\n" + `${text[t].scene}.write -> '${text[t].value}'` + `, x: ${text[t].x}, y: ${text[t].y}, color: ${text[t].color}, size: ${text[t].font_size}; \n` ;
-  
-}
+console.log("ookiku good luck and goodbye")
+  console.log(text[t])
+
 }
 var all_nodes = []
 for(var n = 0; n < scene_nodes.length; n++ ){
@@ -74,6 +76,7 @@ for(var n = 0; n < scene_nodes.length; n++ ){
         for (var i = 0; i < all_nodes.length; i++) {
           var node = all_nodes[i];
           for (var j = 0; j < node.length; j++) {
+
               var obj = node[j];
 
               if(obj.scene == scenes[i].title && obj.scene != 'main_menu'){

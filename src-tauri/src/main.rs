@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::process::Command;
 use rfd::FileDialog;
 use std::fs::{self, File};
@@ -29,7 +30,6 @@ async fn create_project(path: String, name: String) -> Result<(), String> {
         .map_err(|e| format!("Failed to create directory: {}", e))?;
     println!("Created project directory at: {:?}", project_path);
     let file_path = project_path.join("project.nvl");
-    
     let now: DateTime<Utc> = Utc::now();
     let file_content: String = format!(
         "name: {}
@@ -46,7 +46,29 @@ async fn create_project(path: String, name: String) -> Result<(), String> {
     macroquad = {{ version = "0.4", features = ["audio"] }}
     "#,
         name
-    );let main_rs: PathBuf = project_path.join("src").join("main.rs");
+    );
+    let source_path = project_path.join("main.dlt");
+    let source_code: String = "window_title \"idk\";
+
+\nscene main_menu;
+\nscene city;
+\nbg '/src/assets/bg/4258797.jpg';
+\nbg '/src/assets/bg/bg01.jpg';
+
+\nchar me;
+\nchar Dude;
+\nchar Guy;
+
+audio love;
+
+main_menu.play_bgm -> 'love'; 
+
+main_menu.draw_background -> src: '/src/assets/bg/4258797.jpg'; 
+
+city.draw_background -> src: '/src/assets/bg/bg01.jpg'; 
+
+main_menu.write -> 'start', x: 0, y: 200, color: white, size: 30; ".to_string();
+    let main_rs: PathBuf = project_path.join("src").join("main.rs");
     let default_code = format!(
         "use macroquad::prelude::*; \n\n#[macroquad::main(\"{}\")] \nasync fn main() {{ \nloop {{ \nclear_background(LIGHTGRAY); \nnext_frame().await \n}} \n}}",
         name 
@@ -54,7 +76,7 @@ async fn create_project(path: String, name: String) -> Result<(), String> {
  
     write_file(file_path, &file_content).await;
     write_file(cargo_toml, &cargo_content).await;
-   
+    write_file(source_path, &source_code).await;
     tokio_fs::create_dir_all(&project_path.join("src"))
     .await
     .map_err(|e| format!("Failed to create directory: {}", e))?;

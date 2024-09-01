@@ -30,7 +30,7 @@ let selected = 0;
     Discard 
   </Button>
   <Button on:click={onConfirm(text, available_bg[selected])} variant='gradient' gradient={{from: 'teal', to: 'blue', deg: 60}}>
-    Create New Project
+    Add new Scene
   </Button>
 </div>
 </div>

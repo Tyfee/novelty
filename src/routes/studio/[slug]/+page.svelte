@@ -38,6 +38,7 @@ import build from "../utils/build";
    {title: "city", bg: bg01, id: 1, bgm: 'none'}
 ];
 
+
 function updateCurrentBg(newBg: any){
  scenes[seeing].bg = newBg;
  scenes = [...scenes];
@@ -165,7 +166,7 @@ type: "dialogue",
 
 
 
-let scene_nodes = [mms, script_code]
+let scene_nodes = [{id: 0 , data: mms}, {id: 1, data: script_code}]
 //open add node modal
 function addNode(){
 action = "adding_node";
@@ -182,6 +183,15 @@ function confirmScene(text: string, background: any){
     }
     scenes = [...scenes, new_scene]
 action = null;
+}
+
+function deleteScene(id: number, name: string){
+    console.log("deleting "+ id, name)
+    scenes = scenes.filter((i) => i.id != id)
+    console.log(scene_nodes)
+    scene_nodes[seeing].data = scene_nodes[seeing].data.filter((i) => i.scene != name)
+   
+    
 }
 
 function confirmText(value: string, color_str: string, fs: number){
@@ -263,25 +273,33 @@ let actionArray: any = []
         console.log('Current scene index:', seeing);
         console.log('Before update:', scene_nodes);
 
-        // Ensure scene_nodes[seeing] is an array before pushing
-        if (!Array.isArray(scene_nodes[seeing])) {
-            scene_nodes[seeing] = [];
+        if (!Array.isArray(scene_nodes[seeing].data)) {
+            scene_nodes[seeing].data = [];
         }
 
         // Add the node to the current scene
-        scene_nodes[seeing] = [...scene_nodes[seeing], node];
+        scene_nodes[seeing].data = [...scene_nodes[seeing].data, node];
 
         console.log('After update:', scene_nodes);
 
-        // Reset action (if needed)
         action = null;
     }
 
-    // Reactive statement to update UI when `scene_nodes` or `seeing` changes
-    $: current_scene_nodes = scene_nodes[seeing];
+    $: current_scene_nodes = scene_nodes[seeing].data;
 
+function deleteNode(text: string){
+    scene_nodes[seeing].data = scene_nodes[seeing].data.filter((i) => i.text != text);  
+    current_scene_nodes = scene_nodes[seeing].data
+ }
 
+function editNode(scene: string, text: string){
+    const theNode = scene_nodes[seeing].data.find((i) => i.text == text)
+  if(theNode){
+    var newText: string = "wow";
+    theNode.text = newText;
+  }
 
+}
 function selectToolbarOption(bundle: any, index: any){
     if(bundle == 0 && index == 5){
         save_and_close();
@@ -406,7 +424,7 @@ function selectToolbarOption(bundle: any, index: any){
 
 <img  on:click={() => currently_inspecting = 3} style={`left: ${game_logo_xy.x}vw;top: ${game_logo_xy.y}vh; border: ${currently_inspecting == 3 ? '3px solid white' : 'none'}`} alt="logo from your game." src={game_logo} class="logo_preview"/>
 
-<div on:click={() => currently_inspecting = 2} class="main_menu_preview"   style={`top: ${-590 + menu_padding_top}px; left: ${menu_padding_left}px; font-size: ${menu_button_size + 30.0}vw; border: ${currently_inspecting == 2 ? '2px solid white' : 'none'}`}
+<div on:click={() => currently_inspecting = 2} class="main_menu_preview"   style={`top: ${-590 + menu_padding_top}px; left: ${menu_padding_left}px; font-size: ${menu_button_size + 60.0}vw; border: ${currently_inspecting == 2 ? '2px solid white' : 'none'}`}
     >
 
     {#each main_menu_info.items as item, index}
@@ -426,10 +444,10 @@ function selectToolbarOption(bundle: any, index: any){
 {:else if display == 1}
  <div style="background-color: rgba(0,0,0,0.9);"><strong style="color: white">Scene {seeing} Event Nodes</strong></div>
 <div class="scripting">
-   
+    
     {#if current_scene_nodes}
     {#each current_scene_nodes as code, index}
-        <Node onEdit={() => {action = "editing_node"; current_editing_node= code; current_editing_node= index;}} onNodeClick={ handleNodeClick(index * 20)} x={code.x} y={code.y} prop1={code.text} prop2={`${code.character}, ${code.mood}`} prop3={code.type} prop4={code.options}/>
+        <Node onRemove={() => deleteNode(code.text)} onEdit={() => {action = "editing_node"; current_editing_node= code; current_editing_node= index;}} onNodeClick={ handleNodeClick(index * 20)} x={code.x} y={code.y} prop1={code.text} prop2={`${code.character}, ${code.mood}`} prop3={code.type} prop4={code.options}/>
     {/each}
 {/if}
 <div style="position: absolute;bottom: 30vh; width: 61%; height: 10%;"><strong style="color: white">
@@ -450,7 +468,7 @@ function selectToolbarOption(bundle: any, index: any){
         <div style="width: 12vw;position: sticky; background-color: black; color: white;">{scene.title}
 
             <button style="position: absolute; left: 98%">-</button>
-            <button style="position: absolute; left: 112%">x</button>
+            <button on:click={(e) => {e.stopPropagation(); deleteScene(scene.id, scene.title)}} style="position: absolute; left: 112%">x</button>
         </div>
     <img class="scene_bg"src={scene.bg} alt="scene"/>
     </div>
