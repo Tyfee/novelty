@@ -74,19 +74,22 @@ for(var n = 0; n < scene_nodes.length; n++ ){
         source_code = source_code + "\n" + `${scenes[i].title}.write -> '${main_menu_info.items[j]}'` + `, x: ${main_menu_info.slide_from}, y: ${main_menu_info.start_at + j * 100}, color: ${main_menu_info.color}, size: ${main_menu_info.font_size - 10}; \n` ;
         }
         for (var i = 0; i < all_nodes.length; i++) {
-          var node = all_nodes[i];
-          for (var j = 0; j < node.length; j++) {
+        
+          console.log('debug_stuff')
+          console.log(all_nodes[i].data.length)
+          for (var j = 0; j < all_nodes[i].data.length; j++) {
 
-              var obj = node[j];
+              var obj = all_nodes[i].data[j];
+             console.log('real debug')
+              console.log(obj)
 
-              if(obj.scene == scenes[i].title && obj.scene != 'main_menu'){
                 if(obj.type == "dialogue"){
                 source_code = source_code + "\n" + `${obj.scene}.say -> '${obj.text}', who: ${obj.character}, pose: ${obj.mood}; \n` ;
                 }
                 if(obj.type == "choice"){
                   source_code = source_code + "\n" + `${obj.scene}.ask -> '${obj.text}'; \n` ;
                   }
-              }
+              
           }
         }
         
@@ -100,7 +103,8 @@ for(var n = 0; n < scene_nodes.length; n++ ){
 
 console.log(main_menu_info)
 console.log(source_code);
-console.log(scene_nodes)
+console.log("here are the nodes")
+console.log( scene_nodes)
 
 transpileToRust(source_code)
 return source_code;

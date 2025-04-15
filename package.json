@@ -18,6 +18,7 @@
     "@material/theme": "^14.0.0",
     "@material/typography": "^14.0.0",
     "@smui/common": "^7.0.0",
+    "@svelteuidev/composables": "^0.15.7",
     "@svelteuidev/core": "^0.15.7",
     "@tauri-apps/api": "^1"
   },

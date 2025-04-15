@@ -34,8 +34,8 @@ import build from "../utils/build";
     const all_scenes = [bg00, bg01]
    let code: string;
   $: scenes = [
-    {title: "main_menu", bg: bg00, id: 0, bgm: 'love'},
-   {title: "city", bg: bg01, id: 1, bgm: 'none'}
+    {title: "main_menu", bg: bg00, id: 0, bgm: 'none'},
+   {title: "first", bg: bg01, id: 1, bgm: 'none'}
 ];
 
 
@@ -65,10 +65,12 @@ $: assets = [
 
     let text: Array<any> = [];
 
-  let audio = [{
+  let audio: any = [
+/*    {
     title: "love",
     file: "love.wav"
-}]
+}*/
+]
   let characters = [
     {name: "me", id: "0000", poses: null}, 
     {name: "Dude", id: "0001", poses: ['neutral', 'sad']}, 
@@ -142,7 +144,7 @@ let mms = [{
 ]
 
   let script_code = [{
-    scene: "city",
+    scene: "first",
    type: "dialogue",
    character: "Guy",
    text: "Hello.",
@@ -152,7 +154,7 @@ let mms = [{
    mood: 'neutral'
   },
 {
-    scene: "city",
+    scene: "first",
 type: "dialogue",
  character: "Dude",
  text: "What would you like to eat?",

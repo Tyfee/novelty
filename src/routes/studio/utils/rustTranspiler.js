@@ -6,6 +6,7 @@ var total_scenes = [];
 var total_images =[];
 var total_audio = [];
 var total_characters = [];
+
 var functions = [];
 var nodes = [];
 let scene_data = {}; 
@@ -93,7 +94,6 @@ fn window_conf() -> Conf {
 
 }
 
-var all_nodes = [];
 //turn each scene into a texture variable
 if(parsed[i].includes("scene")){
   total_scenes.push(thisLine[1]);
@@ -196,8 +196,7 @@ console.log("all theh scenes: "+ total_scenes)
   console.log(functions)
   //every action will be turned into rust code here. including the whole rendering pipeline.
   
-  var hasDialog = false;
-  
+
   for(var i = 0; i < total_scenes.length; i++){
   user_loop = user_loop + `\nif current_scene == ${i} {`
   
@@ -238,6 +237,8 @@ console.log("all theh scenes: "+ total_scenes)
   `
   }
 
+
+
   if (functions[j].method.trim() == "draw_background") {
         
         console.log("drawing_bg...")
@@ -264,7 +265,7 @@ console.log("all theh scenes: "+ total_scenes)
             ..Default::default()
           },); \n` }
         
-      else if (functions[j].method.trim() == "say" && !hasDialog){
+      else if (functions[j].method.trim() == "say"){
         var who = functions[j].params.trim().split(', ')
         var actually_Who = who[1].split(":")
         console.log("this is who ")
@@ -281,7 +282,6 @@ console.log("all theh scenes: "+ total_scenes)
         user_loop = user_loop + `\n draw_rectangle(20.0, screen_height() / 1.6, screen_width() / 1.05, screen_height() / 3.0, PINK);\n`;
         user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_nodes[${total_scenes[i]}_index], 50.0, screen_height() / 1.4, (screen_width() * screen_height()) / 14000.0, BLACK);`
   
-     hasDialog = true;
           }
           
     }
@@ -304,7 +304,7 @@ let formatted_characters = characters.map(character => `"${character.replace(/"/
   let array_declaration = `let ${scene_name}_nodes: Vec<String> = vec![${formatted_texts}];\n`;
   let mood_declaration = `let ${scene_name}_moods: Vec<String> = vec![${formatted_moods}];\n`;
   let character_declaration = `let ${scene_name}_characters: Vec<String> = vec![${formatted_characters}];\n`;
-
+  
   user_define += array_declaration;
   
   user_define += character_declaration;

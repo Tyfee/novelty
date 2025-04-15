@@ -61,7 +61,7 @@ async fn create_project(path: String, name: String) -> Result<(), String> {
 
 audio love;
 
-main_menu.play_bgm -> 'love'; 
+// main_menu.play_bgm -> 'love'; 
 
 main_menu.draw_background -> src: '/src/assets/bg/4258797.jpg'; 
 
