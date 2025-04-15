@@ -55,6 +55,12 @@ city.say -> 'What would you like to eat?', who: 0000;
 
 ```
 
+# Executable
+
+![Windows Executable](https://github.com/Tyfee/novelty/blob/main/screenshots/novelty_render.png?raw=true)
+
+
+
 # Compiling it yourself
 
 
