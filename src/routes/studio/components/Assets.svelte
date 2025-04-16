@@ -19,7 +19,7 @@ function toggleDisplay(index: any){
 
 </script>
 
-<div class="assets">
+<div class="assets theme-dark">
     🗎 Assets Management
 
 
@@ -94,7 +94,7 @@ height: 42vh;
     cursor: pointer;
     }
     .assets_item:hover{
-box-shadow: inset 500px 500px rgba(255, 255, 255, 0.342);
+box-shadow: inset 500px 500px rgb(0, 68, 48);
     }
     .asset{
         border: 1px solid black;

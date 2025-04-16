@@ -32,7 +32,7 @@ function expand(index: any){
     
     </div>
     {#if expanded != -1}
-<div style="margin-left: {(expanded * 5)}vw;" class="dropdown">
+<div style="margin-left: {(expanded * 5)}vw;" class="dropdown theme-dark">
 {#each available_options[expanded] as option, index}
 <p></p>
 <strong class="option" on:click={() =>{ onOption(expanded, index); expanded = -1;}}>{option}</strong>
@@ -47,8 +47,18 @@ function expand(index: any){
         top: 6vh;
         width: auto;
         height: auto;
-        background-color: white;
+ 
 }
+
+.theme-light {
+color: black;
+    background-color: #ffffff; /* Light theme text color */
+  }
+
+.theme-dark {
+    background-color: #000000;
+  }
+
 .toolbar{
         display: flex;
         
@@ -69,7 +79,7 @@ function expand(index: any){
         padding: 10px 10px;
     }
     .option:hover{
-    box-shadow: inset 500px 500px rgba(0, 0, 0, 0.247);
+    box-shadow: inset 500px 500px rgba(226, 226, 226, 0.247);
 
     }
    

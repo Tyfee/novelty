@@ -9,6 +9,7 @@ use tokio::fs as tokio_fs;
 use tokio::runtime::Runtime;
 use std::path::PathBuf;
 use chrono::prelude::*;
+use serde::Serialize;
 
 
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
@@ -20,9 +21,69 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-//whole project initialization pipeline. it creates a folder in c:/projects then creates the assets and the cargo.toml and main.rs files.
 #[tauri::command]
-async fn create_project(path: String, name: String) -> Result<(), String> {
+async fn delete_project(path: String, name: String) -> Result<(), String>{
+let project_path = Path::new(&path).join(&name);
+
+tokio_fs::remove_dir_all(&project_path)
+.await
+.map_err(|e| format!("Failed to delete project {}", e))?;
+println!("Project {:?} has been deleted successfully", name);
+Ok(())
+}
+//whole project initialization pipeline. it creates a folder in c:/projects then creates the assets and the cargo.toml and main.rs files.
+
+#[tauri::command]
+async fn fetch_settings(path: String) -> Result<String, String>{
+let settings = tokio_fs::read_to_string(path)
+.await
+.map_err(|e| format!("Error fetching settings: {}", e))?;
+
+Ok(settings)
+}
+#[tauri::command]
+async fn load_nvl_file(path: String, name: String) -> Result<String, String>{
+    let full_path = Path::new(&path).join(&name).join("project.nvl");
+    println!("Full path: {}", full_path.display());
+let data = tokio_fs::read_to_string(full_path)
+.await
+.map_err(|e| format!("Error fetching file data for {}, error: ", e))?;
+
+Ok(data)
+}
+
+#[tauri::command]
+async fn save_settings(path: String,
+    theme: String,
+    language: String,
+    save_path: String,
+    auto_update: bool,
+    auto_save: bool) -> Result<(), String> {
+    let project_path = Path::new(&path);
+
+    if !project_path.exists(){
+        tokio_fs::create_dir_all(project_path)
+        .await
+        .map_err(|e| format!("Failed to initialize folder! {}", e))?;
+    }
+    let source_path = project_path.join("settings.json");
+    println!("Settings initialized at: {:?}", source_path);
+     let settings_content: String = format!(r#"[
+     {{ 
+       "theme": "{}",
+       "language": "{}",
+       "save_path": "{}",
+       "auto_update": {},
+       "auto_save": {}
+     }}
+     ]"#, theme, language, save_path.replace("\\", "\\\\"), auto_update, auto_save);
+    write_file(source_path, &settings_content).await
+    .map_err(|e| format!("We couldn't save your setting files! {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn create_project(path: String, name: String, description: String) -> Result<(), String> {
     let project_path = Path::new(&path).join(&name);
 
     tokio_fs::create_dir_all(&project_path)
@@ -33,8 +94,9 @@ async fn create_project(path: String, name: String) -> Result<(), String> {
     let now: DateTime<Utc> = Utc::now();
     let file_content: String = format!(
         "name: {}
-        date: {}
-        scenes:", name, now.format("%Y-%m-%d %H:%M:%S"));
+       \n description: {}
+        \ndate: {}
+        \nscenes:", name,description, now.format("%Y-%m-%d %H:%M:%S"));
     let cargo_toml = project_path.join("cargo.toml");
     let cargo_content = format!(
         r#"[package]
@@ -137,6 +199,8 @@ async fn load_file(from: String, name: String, file_type: String, file_name: Str
 Ok(())
 }
 
+
+
 #[tauri::command]
 async fn call(path: PathBuf, command: String, args: Vec<String>) -> Result<String, String> {
     // Log the command details
@@ -202,7 +266,16 @@ Ok(project_paths)
 
 fn main() {
     tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![greet, create_project, write_file, call, fetch_projects, open_project, load_file])
+    .invoke_handler(tauri::generate_handler![
+        greet,
+         create_project, 
+         fetch_settings, 
+         save_settings,delete_project,
+         write_file, call, 
+         fetch_projects,
+          open_project, 
+          load_file,
+          load_nvl_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

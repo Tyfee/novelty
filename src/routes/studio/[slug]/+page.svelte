@@ -1,7 +1,8 @@
 <script lang="ts">
+    import '../../../themes.css'
     export const prerender = false;
   import { invoke } from "@tauri-apps/api/tauri";
-  import { appWindow } from '@tauri-apps/api/window';
+  import { appWindow } from "@tauri-apps/api/window";
   import Node from '../components/Node.svelte'
   import '../components/modal.css'
   import { page } from '$app/stores';
@@ -26,6 +27,7 @@ import build from "../utils/build";
     import AddCharacter from "../components/Add_Character.svelte";
     import { onMount } from "svelte";
     import transpileToRust from "../utils/rustTranspiler";
+
 
 
     let current_editing_node: any;
@@ -88,11 +90,7 @@ $: assets = [
 let project_name: string;
 
 
-  $: {
-    const { params } = $page;
-    console.log(params.slug);
-    project_name = params.slug;
-  }
+
 
   const items = [
 		{ label: 'START GAME', value: 'start' },
@@ -108,8 +106,8 @@ let project_name: string;
   }
 
   onMount(() => {
-    const projectName = 'current_project.nvl*'; 
-    setWindowTitle(projectName);
+    setWindowTitle(project_name);
+    load_nvl()
   });
 setWindowTitle('current_project.nvl*');
     let menu_buttons: any = ['start']
@@ -128,7 +126,13 @@ setWindowTitle('current_project.nvl*');
   let action: any = null;
   //0 scene, 1 dialog, 2 main menu
   let currently_inspecting = 2;
+ const currentUrl = window.location.pathname; 
 
+const segments = currentUrl.split('/');  
+const lastSegment = segments[segments.length - 1]; 
+
+console.log(lastSegment); 
+project_name = lastSegment
 //types include dialogue, transition, choice and action
 
 let mms = [{
@@ -187,6 +191,18 @@ function confirmScene(text: string, background: any){
 action = null;
 }
 
+async function load_nvl() {
+    let path = "c:\\Novelty\\Projects"
+    console.log('Path:', path);
+    console.log('Project Name:', project_name);
+
+    let fullPath = `${path}\\${project_name}`;
+    console.log('Full path:', fullPath); // Ensure the full path is correct
+
+    await invoke("load_nvl_file", {path, name: project_name})
+    .then((data) => console.log(data))
+}
+
 function deleteScene(id: number, name: string){
     console.log("deleting "+ id, name)
     scenes = scenes.filter((i) => i.id != id)
@@ -225,6 +241,7 @@ async function openImage(){
       file_name: "file.png"
     });
     console.log('File copied successfully');
+    
   } catch (error) {
     console.error('Error copying file:', error);
   }
@@ -634,4 +651,5 @@ background-color: gray;
     height: 60vh;
     margin-left: 4vw;
 }
+
 </style>

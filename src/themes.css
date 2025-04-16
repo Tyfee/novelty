@@ -1,0 +1,17 @@
+.card.theme-light,
+.card div.theme-light,
+.main_container.theme-light {
+  color: black;
+  background-color: #ffffff !important;
+}
+
+.card.theme-dark,
+.card div.theme-dark,
+.main_container.theme-dark {
+  background-color: #0000002c !important;
+  color: white !important;
+}
+
+.text {
+  background-color: transparent !important;
+}

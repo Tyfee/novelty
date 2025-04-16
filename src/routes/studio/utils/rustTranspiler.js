@@ -207,7 +207,7 @@ console.log("all theh scenes: "+ total_scenes)
         \n}`
 
         if(i != 0){
-          user_loop = user_loop + `\nif is_key_pressed(KeyCode::Space) &&  ${total_scenes[i]}_index < ${total_scenes[i]}_nodes.len() {
+          user_loop = user_loop + `\nif is_key_pressed(KeyCode::Space) &&  ${total_scenes[i]}_index + 1 < ${total_scenes[i]}_nodes.len() {
           \n
         ${total_scenes[i]}_index += 1;
   
@@ -276,11 +276,11 @@ console.log("all theh scenes: "+ total_scenes)
           ..Default::default()
         },); \n`  
         user_loop = user_loop + `\n draw_rectangle(20.0, screen_height() / 1.8, screen_width() / 5.0, screen_height() / 6.0, Color::from_hex(0x380054));\n`;
-        user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_characters[${total_scenes[i]}_index], 50.0, screen_height() / 1.67, (screen_width() * screen_height()) / 15000.0, WHITE);`
+        user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_characters[${total_scenes[i]}_index], 50.0, screen_height() / 1.67, (screen_width() * screen_height()) / 20000.0, WHITE);`
   
 
         user_loop = user_loop + `\n draw_rectangle(20.0, screen_height() / 1.6, screen_width() / 1.05, screen_height() / 3.0, PINK);\n`;
-        user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_nodes[${total_scenes[i]}_index], 50.0, screen_height() / 1.4, (screen_width() * screen_height()) / 14000.0, BLACK);`
+        user_loop = user_loop +  `\n draw_text(&${total_scenes[i]}_nodes[${total_scenes[i]}_index], 50.0, screen_height() / 1.4, (screen_width() * screen_height()) / 25000.0, BLACK);`
   
           }
           

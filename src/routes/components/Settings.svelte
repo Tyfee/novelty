@@ -1,45 +1,66 @@
 <script lang="ts">
     import { NativeSelect, Text, Textarea, Button, Checkbox, TextInput, Title } from '@svelteuidev/core';
-    import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/tauri';
     import './modal.css';
+    import toast, { Toaster } from 'svelte-french-toast';
   
     let themes: Array<string> = ["dark", "light", "pastel"];
-    let languages: Array<string> = ["English", "Português", "Français", "日本語"];
+    let languages: Array<string> = ["English", "Português", "Français", "日本語", "Espanõl"];
   
-    let auto_save: boolean = true;
-    let theme: string = 'pastel';
-    let language: string = "English";
-    let save_path: string = "C:\\Novelty\\Projects";
-    let auto_update: boolean;
+    $: auto_save = true;
+    $: theme = 'pastel';
+    $: language = "English";
+    $: save_path = "C:\\Novelty\\Projects";
+    $: auto_update = false;
     export let onClose: any;
-  
-    function save() {
-      // Save logic here
+    export let onChooseLanguage: (lang: string) => void;
+    export let current_language: any;
+    $: l = current_language[0];
+    async function save() {
+
+      toast.success("New settings saved!");
+
+let saving_data = [{
+  theme,
+  language,
+  save_path,
+  auto_update,
+  auto_save,
+}]
+
+await invoke("save_settings", {path: "C:\\Novelty\\",
+theme: saving_data[0].theme,
+  language: saving_data[0].language,
+  savePath: saving_data[0].save_path,
+  autoUpdate: saving_data[0].auto_update,
+  autoSave: saving_data[0].auto_save,
+})    
     }
   </script>
-  
+  <Toaster/>
   <div class="modal">
     <div class="title-bar">
-      <h1>Settings</h1>
+      <h1>{l.s}</h1>
       <button on:click={onClose}>&times;</button>
     </div>
     <div class="content">
         
        
         <TextInput
-        label="Default path for projects"
+        label={`${l.dpfp}: `}
         
         placeholder="Pick one"
         bind:value={save_path}
       />
       <NativeSelect
-        label="Language"
+      label={`${l.l}: `}
         data={languages}
         placeholder="Pick one"
         bind:value={language}
+        on:change={() => onChooseLanguage(language)}
       />
       <NativeSelect
-        label="Studio Theme"
+        label={l.t}
         data={themes}
         placeholder="Pick one"
         bind:value={theme}
@@ -47,7 +68,7 @@
       <p></p>
       <Checkbox
         bind:checked={auto_save}
-        label="Enable Auto-Save"
+        label={l.as}
       />
       <p></p>
       <Checkbox

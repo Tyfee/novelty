@@ -1,73 +1,116 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/tauri";
+import {invoke} from "@tauri-apps/api/tauri"
+import '../themes.css'
   import { Button, Card, Group, Image, Text, Badge } from "@svelteuidev/core";
   import bg00 from '../assets/bg/4258797.jpg'
     import bg01 from '../assets/bg/bg01.jpg'
     import { goto } from "$app/navigation";
 import Create_Project from './components/Create_Project.svelte';
+import EditProject from "./components/Edit_Project.svelte";
 import Settings from "./components/Settings.svelte";
     import { onMount } from "svelte";
     import logo from '../assets/novelty_logo.png'
-
-
+import en from '../lang/en-US.json'
+import pt from '../lang/pt-BR.json'
+import ja from '../lang/ja-JA.json'
+import fr from '../lang/fr-FR.json'
+import es from '../lang/es.json'
+    import Popup from "./components/Popup.svelte";
+    import toast, { Toaster } from "svelte-french-toast";
 function navigate(project_name: string){
   goto(`/studio/${project_name}`)
+  console.log(project_name)
 }
 
+let my_projects: any[] = []
+$: theme = "theme-dark"
+onMount(async () => {
+  my_projects = await fetchProjects()
 
-$: my_projects = [
-  ];
-  onMount(async () => {
-    try {
-      let all_projects: string = await invoke('fetch_projects');
-      all_projects.forEach((project: any) => {
+  console.log('huh')
+})
 
-        let split_data = project.split("\\");
-        let project_id = split_data[3];
-      
+async function fetchProjects(): Promise<any[]> {
+  const projects: any[] = [];
 
-        my_projects = [...my_projects, {
-id: project_id,
-title: project_id,
-description: "It's a game about a dude doing things.",
-date_created: "",
-icon: bg00,
-path: project
-  }]
+  try {
+    const all_projects: string[] = await invoke('fetch_projects');
+console.log(all_projects)
+    all_projects.forEach((projectPath: string) => {
+      const split_data = projectPath.split("\\");
+      const project_id = split_data[3];
 
+      projects.push({
+        id: project_id,
+        title: project_id,
+        description: "It's a game about a dude doing things",
+        date_created: "",
+        icon: bg00,
+        path: projectPath
       });
+    });
+  } catch (error) {
+    console.error('Failed to fetch projects:', error);
+  }
 
+  return projects;
+}
+async function deleteProject(project_name: string){
+  console.log(project_name)
+  const path = "C:\\Novelty\\Projects";
+  try{
+  await invoke('delete_project', { path, 
+    name: project_name
+  
+  })
+  my_projects = await fetchProjects();
+  toast.success("Project deleted succesfully!");
 
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    }
-  });
+  }catch (error){
+    console.log("There has been an error deleting your project " + project_name + ": " + error)
+  }
+}
+$: current_language = en
+$: l = current_language[0]
+$: currently_editing = ""
+const language_map = [{
+  "English": en,
+  "Português": pt,
+  "Français": fr,
+   "日本語": ja,
+   "Español": es
+}]
+
   let name = "";
   let greetMsg = "";
-  
 
-$: creating_new_project = true;
-
+$: creating_new_project = false;
+$: editing_project = false;
 $: seeing_settings = false;
 let project_name = "";
 
 
-function startProject(name: any){
-  create_project(name);
+function startProject(name: string, description: string){
+  create_project(name, description);
 }
 
-
+function changeLanguage(language: string){
+console.log(language_map[0][language])
+current_language = language_map[0][language]
+}
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     greetMsg = await invoke("greet", { name });
   }
 
-  async function create_project(project_name: any){
+  async function create_project(project_name: string, description: string){
     const path = "C:\\Novelty\\Projects";
 
   try {
-    await invoke("create_project", { path, name: project_name });
+    await invoke("create_project", { path, name: project_name, description: description });
     console.log("Project created successfully");
+    toast.success("Project created succesfully!");
+
     navigate(project_name)
     creating_new_project = false;
   } catch (error) {
@@ -92,23 +135,35 @@ function startProject(name: any){
   }
 }
 </script>
-<div class="main_container">
+<div class={`main_container ${theme}`}>
+  
+<Toaster />
   {#if creating_new_project}
     <Create_Project onConfirm={startProject} onClose={() => creating_new_project = false}/>
   {/if}
-  {#if seeing_settings}
-    <Settings onClose={() => seeing_settings = false}/>
+  {#if editing_project}
+    <EditProject desc={currently_editing.description} text={currently_editing.title} onConfirm={startProject} onClose={() => editing_project = false}/>
   {/if}
-<div class="container">
-  <h1>Recent Projects</h1>
+  {#if seeing_settings}
+    <Settings current_language={current_language} onChooseLanguage={changeLanguage} onClose={() => 
+    {seeing_settings = false;
+    
+    }}/>
+  {/if}
+<div class={`container ${theme}`}>
+  <h1>{l.rp}</h1>
 
-  <div class="projects_container">
+  <div class={`projects_container ${theme}`}>
+
+    {#if my_projects.length < 1}
+
+<p>{l.nny} <a on:click={() => {creating_new_project = true}} href="#create">Start writing now.</a></p>
+    {/if}
 {#each my_projects as project, index}
 
 <p></p>
 
-<a href="/studio/{project.id}" class="card-link">
-<Card shadow='sm' padding='lg'>
+<Card class={`card ${theme}`} withBorder  shadow='sm' padding='lg'>
 	<Card.Section padding='lg'>
 		<Image
 			src={project.icon}
@@ -117,27 +172,37 @@ function startProject(name: any){
 		/>
 	</Card.Section>
   
-  <Text weight={500}>{project.title}</Text>
+  <Text class={`text ${theme}`} weight={500}>{project.title}</Text>
   
 	<Group position='apart'>
   
-		<Text size="sm">{project.path}</Text>
+		<Text class={`text ${theme}`} size="sm">{project.path}</Text>
 		<Badge color='pink' variant='light'>
-			On Sale
+			01/01/1970
 		</Badge>
 	</Group>
 
-	<Text size='sm'>
+	<Text class={`text ${theme}`} size='sm'>
 	{project.description}</Text>
 
-	<Button variant='light' color='blue' fullSize>
+	<Button on:click={() => navigate(project.title)} variant='light' color='green' fullSize>
 		Keep Writing
 	</Button>
-  <Button variant='light' color='yellow' fullSize>
-		Create Release
+  <Button  on:click={() => {editing_project = true; currently_editing = project}} variant='light' color='yellow' fullSize>
+		Edit Project
 	</Button>
+
+  <Button variant='light' color='blue' fullSize>
+		Duplicate Project
+	</Button>
+  <Button on:click={() =>{
+     deleteProject(project.title);
+  }} variant='light' color='red' fullSize>
+		Delete Project 
+	</Button>
+  
 </Card>
-</a>
+
 {/each}
 </div>
 
@@ -145,7 +210,7 @@ function startProject(name: any){
 <div class="container2">
   <button on:click={() => creating_new_project = true} class="menu_btn">CREATE NEW PROJECT FROM SCRATCH</button>
  <p></p> <button on:click={open_project} class="menu_btn">OPEN EXISTING PROJECT</button>
- <p></p><button class="menu_btn" on:click={() => { seeing_settings = true; creating_new_project = false; }}>SETTINGS</button>
+ <p></p><button class="menu_btn" on:click={() => { seeing_settings = true; creating_new_project = false; }}>{(l.s).toUpperCase()}</button>
  <p></p> <button class="menu_btn">GET FULL VERSION LICENSE</button>
 </div>
 
@@ -167,7 +232,13 @@ function startProject(name: any){
     
     height: 60vh;
      overflow-y: scroll;
-  }
+     scrollbar-width: none;      
+  -ms-overflow-style: none;   
+}
+
+.projects_container::-webkit-scrollbar {
+  display: none; 
+}
   .logo.vite:hover {
     filter: drop-shadow(0 0 2em #747bff);
   }
@@ -215,7 +286,7 @@ overflow: hidden;
   position: absolute;
   z-index: 3;
   left: 0;
-  bottom: -20px;
+  bottom: -5px;
   display: flex;
   align-items: end;
 }

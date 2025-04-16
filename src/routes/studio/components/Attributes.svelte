@@ -25,7 +25,7 @@ export let hasBgm: boolean;
 let mapped_audio = audio.map((i) => i.file)
 let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
 </script>
-<div class="assets attributes">
+<div class="assets attributes theme-black">
     <strong>🛈 Inspecting: {inspectable[currently_inspecting]}</strong>
     {#if currently_inspecting == 0}
 
@@ -231,6 +231,15 @@ input[type="range"] {
     opacity: 0.7;
     transition: opacity .2s;
 }
+.theme-light {
+color: black;
+    background-color: #ffffff; /* Light theme text color */
+  }
+
+.theme-dark {
+    background-color: #0000002c;
+    color: white !important;
+  }
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;

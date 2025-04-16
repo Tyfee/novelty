@@ -1,6 +1,6 @@
 <script lang="ts">
         import { NativeSelect, Text, Textarea, Button, Title, TextInput, CheckboxGroup } from '@svelteuidev/core';
-        import { writeTextFile } from "@tauri-apps/api/fs";
+        import { writeTextFile } from "@tauri-apps/plugin-fs";
         import './modal.css';
         import logo from '../../assets/novelty_logo.png'
     import { Label } from '@smui/common';
@@ -9,13 +9,17 @@
     let targeted = ['win']
         let value: any;
         let text: string = '';
+        let desc: string = '';
         let action_type: any = "Dialogue";
         export let onClose: any;
         export let onConfirm: any;
       
         // Function to handle the creation of a new project
         function createNewProject() {
-          onConfirm(text);
+          if(text.length > 1){
+          onConfirm(text, desc);
+
+          }
         }
       </script>
       
@@ -25,17 +29,17 @@
           <button on:click={onClose}>&times;</button>
         </div>
         <div class="content">
-<strong>Template</strong>
+<strong style="color: black">Template</strong>
 <div style="width: 100%;gap: 20px ;display: flex;">
         <div class="template_block">
                 <div style={`
                 border: 2px solid ${current_template == 0? 'teal' : 'black'};`} on:click={() => current_template = 0} class="template"></div>
-                Blank
+              <strong style="color: black">  Blank</strong>
         </div>
         <div class="template_block">
           <div style={`
                 border: 2px solid ${current_template == 1? 'teal' : 'black'};`} on:click={() => current_template = 1} class="template"></div>
-                Complete Game
+             <strong style="color: black">   Complete Game</strong>
         </div>
 </div>
 <p style="margin-top: 40px !important;"></p>
@@ -53,7 +57,7 @@
         style="width: 100%;"
          placeholder="What is your new game about?"
          label="Project description"
-         bind:value={text}
+         bind:value={desc}
        />
 
          
