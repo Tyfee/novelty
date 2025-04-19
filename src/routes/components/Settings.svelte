@@ -2,19 +2,23 @@
     import { NativeSelect, Text, Textarea, Button, Checkbox, TextInput, Title } from '@svelteuidev/core';
 import { invoke } from '@tauri-apps/api/tauri';
     import './modal.css';
+    import '../../themes.css'
     import toast, { Toaster } from 'svelte-french-toast';
   
-    let themes: Array<string> = ["dark", "light", "pastel"];
+    let themes: Array<string> = ["theme-dark", "theme-light", "theme-pastel"];
     let languages: Array<string> = ["English", "Português", "Français", "日本語", "Espanõl"];
   
     $: auto_save = true;
-    $: theme = 'pastel';
+   export let theme: string;
     $: language = "English";
     $: save_path = "C:\\Novelty\\Projects";
     $: auto_update = false;
     export let onClose: any;
     export let onChooseLanguage: (lang: string) => void;
+    export let onSaveSettings: (new_settings: any[]) => void;
+    export let onChooseTheme: (theme: string) => void;
     export let current_language: any;
+
     $: l = current_language[0];
     async function save() {
 
@@ -28,6 +32,7 @@ let saving_data = [{
   auto_save,
 }]
 
+
 await invoke("save_settings", {path: "C:\\Novelty\\",
 theme: saving_data[0].theme,
   language: saving_data[0].language,
@@ -35,15 +40,23 @@ theme: saving_data[0].theme,
   autoUpdate: saving_data[0].auto_update,
   autoSave: saving_data[0].auto_save,
 })    
+
+onSaveSettings(
+[{  theme: saving_data[0].theme,
+  language: saving_data[0].language,
+  savePath: saving_data[0].save_path,
+  autoUpdate: saving_data[0].auto_update,
+  autoSave: saving_data[0].auto_save}]
+)
     }
   </script>
   <Toaster/>
-  <div class="modal">
-    <div class="title-bar">
+  <div class="modal {theme}">
+    <div class="title-bar {theme}">
       <h1>{l.s}</h1>
       <button on:click={onClose}>&times;</button>
     </div>
-    <div class="content">
+    <div class="content {theme}">
         
        
         <TextInput
@@ -62,8 +75,9 @@ theme: saving_data[0].theme,
       <NativeSelect
         label={l.t}
         data={themes}
-        placeholder="Pick one"
+        placeholder="Pick a theme"
         bind:value={theme}
+        on:change={() => onChooseTheme(theme)}
       />
       <p></p>
       <Checkbox

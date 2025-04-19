@@ -1,9 +1,23 @@
 .card.theme-light,
 .card div.theme-light,
-.main_container.theme-light {
+.main_container.theme-light{
   color: black;
   background-color: #ffffff !important;
 }
+.menu_btn.theme-light{
+  background-color: white !important;
+  color: black;
+  border: 2px solid black;
+}
+
+.title-bar.theme-light{
+  background-color: rgb(255, 255, 255) !important;
+color: black !important;
+border-bottom: 1px solid black;
+
+}
+  
+
 
 .card.theme-dark,
 .card div.theme-dark,
@@ -11,6 +25,46 @@
   background-color: #0000002c !important;
   color: white !important;
 }
+
+.menu_btn.theme-dark{
+  background-color: rgba(0, 0, 0, 0.349) !important;
+  color: rgb(255, 255, 255);
+}
+
+.content.theme-dark{
+  background-color: rgba(0, 0, 0, 0.911) !important;
+color: white !important;
+
+}
+
+.title-bar.theme-dark{
+  background-color: black !important;
+color: white !important;
+
+}
+
+.svelteui-InputWrapper-label{
+ color: white ;
+}
+
+.card.theme-light,
+.card div.theme-light,
+.main_container.theme-light {
+  color: black;
+  background-color: #ffffff !important;
+}
+
+.card.theme-pastel,
+.card div.theme-pastel,
+.main_container.theme-pastel {
+  background-color: #ffcef7 !important;
+  color: rgb(139, 137, 255) !important;
+}
+
+.menu_btn.theme-pastel{
+  background-color: rgba(40, 96, 133, 0.788);
+}
+
 
 .text {
   background-color: transparent !important;

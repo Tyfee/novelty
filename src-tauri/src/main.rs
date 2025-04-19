@@ -22,6 +22,28 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
+async fn edit_project(path: String, name: String,new_name: String, new_description: String) -> Result<(), String>{
+    let now: DateTime<Utc> = Utc::now();
+    let dir = Path::new(&path).join(&name);
+    let new_dir = Path::new(&path).join(&new_name);
+   let file_path = Path::new(&path).join(&name).join("project.nvl");
+   let file_content: String = format!(
+    "name: {}
+   \n description: {}
+    \ndate: {}
+    \nscenes:", new_name,new_description, now.format("%Y-%m-%d %H:%M:%S"));
+write_file(file_path, &file_content)
+.await
+.map_err(|e| format!("Error editing the project {}", e))?;
+
+tokio_fs::rename(dir, new_dir).
+await
+.map_err(|e| format!("Couldn't rename folder, please restart project {}", e))?;
+
+Ok(())
+}
+
+#[tauri::command]
 async fn delete_project(path: String, name: String) -> Result<(), String>{
 let project_path = Path::new(&path).join(&name);
 
@@ -35,7 +57,10 @@ Ok(())
 
 #[tauri::command]
 async fn fetch_settings(path: String) -> Result<String, String>{
-let settings = tokio_fs::read_to_string(path)
+
+let full_path = Path::new(&path).join("settings.json");
+println!("Full path: {}", full_path.display());
+let settings = tokio_fs::read_to_string(full_path)
 .await
 .map_err(|e| format!("Error fetching settings: {}", e))?;
 
@@ -268,6 +293,7 @@ fn main() {
     tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
         greet,
+        edit_project,
          create_project, 
          fetch_settings, 
          save_settings,delete_project,

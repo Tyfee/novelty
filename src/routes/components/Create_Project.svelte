@@ -2,6 +2,7 @@
         import { NativeSelect, Text, Textarea, Button, Title, TextInput, CheckboxGroup } from '@svelteuidev/core';
         import { writeTextFile } from "@tauri-apps/plugin-fs";
         import './modal.css';
+        import '../../themes.css'
         import logo from '../../assets/novelty_logo.png'
     import { Label } from '@smui/common';
     let current_template = 0;
@@ -10,6 +11,7 @@
         let value: any;
         let text: string = '';
         let desc: string = '';
+        export let theme: string;
         let action_type: any = "Dialogue";
         export let onClose: any;
         export let onConfirm: any;
@@ -24,7 +26,7 @@
       </script>
       
       <div style="overflow-x: hidden;" class="modal">
-        <div class="title-bar">
+        <div class="title-bar {theme}">
           <h1>Create New Project</h1>
           <button on:click={onClose}>&times;</button>
         </div>
