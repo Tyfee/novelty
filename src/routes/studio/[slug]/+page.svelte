@@ -10,8 +10,8 @@
   import EditNode from "../components/Edit_Node.svelte";
   import Add_Scene from '../components/Add_Scene.svelte'
   import AddText from "../components/Add_Text.svelte";
-  import bg00 from '../../../assets/bg/4258797.jpg'
-  import bg01 from '../../../assets/bg/bg01.jpg'
+  import bg00 from '../../../assets/bg/BG02.png'
+  import bg01 from '../../../assets/bg/bg01.png'
 import neutral00 from '../../../assets/chars/neutral00.png'
 import logo from '../../../assets/utils/logo.png'
     import AddScene from "../components/Add_Scene.svelte";
@@ -27,17 +27,18 @@ import build from "../utils/build";
     import AddCharacter from "../components/Add_Character.svelte";
     import { onMount } from "svelte";
     import transpileToRust from "../utils/rustTranspiler";
+    import toast from 'svelte-french-toast';
 
 
 
     let current_editing_node: any;
-    
+    let theme: string;
     let current_editing_node_index: any;
     const all_scenes = [bg00, bg01]
    let code: string;
   $: scenes = [
-    {title: "main_menu", bg: bg00, id: 0, bgm: 'none'},
-   {title: "first", bg: bg01, id: 1, bgm: 'none'}
+    {title: "main_menu", bg: bg00, id: 0, bgm: 'no_music'},
+   {title: "first", bg: bg01, id: 1, bgm: 'no_music'}
 ];
 
 
@@ -68,15 +69,14 @@ $: assets = [
     let text: Array<any> = [];
 
   let audio: any = [
-/*    {
+      {
+    title: "no_music",
+    file: "N/A"
+        },
+   {
     title: "love",
     file: "love.wav"
-}*/
-]
-  let characters = [
-    {name: "me", id: "0000", poses: null}, 
-    {name: "Dude", id: "0001", poses: ['neutral', 'sad']}, 
-    {name: "Guy", id: "0001", poses: ['neutral']}
+}
 ]
   $: seeing = 0;
   let display = 0;
@@ -105,8 +105,24 @@ let project_name: string;
     await appWindow.setTitle(newTitle);
   }
 
-  onMount(() => {
+
+
+
+
+  onMount(async () => {
     setWindowTitle(project_name);
+    
+  let settings: any[]; 
+
+  let path = "C:\\Novelty\\"
+  settings = await invoke("fetch_settings", {path: path})
+
+   let json_data = JSON.parse(settings)
+   console.log(json_data)
+
+   theme = json_data[0].theme;
+   
+
     load_nvl()
   });
 setWindowTitle('current_project.nvl*');
@@ -147,29 +163,15 @@ let mms = [{
   }
 ]
 
-  let script_code = [{
-    scene: "first",
-   type: "dialogue",
-   character: "Guy",
-   text: "Hello.",
-   options: [''],
-   x: 0,
-   y: 20,
-   mood: 'neutral'
-  },
-{
-    scene: "first",
-type: "dialogue",
- character: "Dude",
- text: "What would you like to eat?",
- options: [''],
- x: 3,
- y: 20,
- mood: 'neutral'
-},
+  let script_code = [
 ]
 
 
+let characters = [
+  {  
+   name: "", id: "null", poses: [{}]
+  }
+]
 
 
 let scene_nodes = [{id: 0 , data: mms}, {id: 1, data: script_code}]
@@ -185,11 +187,59 @@ function confirmScene(text: string, background: any){
         title: text,
         bg: background,
         id: Math.floor(Math.random() * 539),
-        bgm: 'none'
+        bgm: 'No Music'
     }
     scenes = [...scenes, new_scene]
 action = null;
 }
+
+async function confirmCharacter(name: string, poses: { file: string; name: string }[]) {
+  if (name == "") {
+    toast.error("Name is required!");
+  } else if (poses.length < 1) {
+    toast.error("You need at least 1 pose!");
+  } else if (poses.find((i) => i.name?.length < 1)) {
+    console.log(poses);
+    toast.error("All poses need a name!");
+  } else {
+    let id_string;
+    const character_id_keys = [];
+    for (var i = 0; i < 5; i++) {
+      character_id_keys.push(Math.floor(Math.random() * 9));
+    }
+
+    id_string = name.charAt(0) + character_id_keys.join('');
+
+    const new_character = {
+  name,
+  id: id_string,
+  poses: poses.map((p: any) =>
+    typeof p === "string"
+      ? { file: p, name: p.split("/").pop()?.split(".")[0] || "Unnamed" }
+      : p 
+  )
+};
+    action = null;
+
+    console.log({
+      projectName: project_name,
+      name: name,
+      id: id_string,
+      files: poses.map(p => p.file)
+    });
+
+    await invoke("create_character", {
+      projectName: project_name,
+      name: name,
+      id: id_string,
+      files: poses.map(p => p.file),
+    }).then((data) => console.log(data));
+
+    characters.push(new_character); 
+  }
+}
+
+
 
 async function load_nvl() {
     let path = "c:\\Novelty\\Projects"
@@ -261,7 +311,7 @@ function confirmEditNode(character, type, text) {
 
 // add new modal to array
 
-function confirmNode(character, type, text, pose) {
+function confirmNode(character, type, text, pose, poseFile) {
 
     let thisType = '';
 let actionArray: any = []
@@ -285,7 +335,8 @@ let actionArray: any = []
             options: actionArray,
             x: (2 * (characters.length + 1)), 
             y: 20,
-            mood: pose
+            mood: pose,
+            file: poseFile
         };
 
         console.log('Adding node:', node);
@@ -339,14 +390,14 @@ function selectToolbarOption(bundle: any, index: any){
      let delight_code =  transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio);
   
      let rust_code = transpileToRust(delight_code);
-       buildAndRun(project_name, rust_code)
+       buildAndRun(project_name, rust_code, delight_code)
     }
     if(bundle == 2 && index == 2){
       let delight_code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio);
-
+       
       let rust_code = transpileToRust(delight_code);
       if(project_name){
-      buildAndRun(project_name, rust_code)
+      buildAndRun(project_name, rust_code, delight_code)
     }
 }
 }
@@ -372,11 +423,11 @@ function selectToolbarOption(bundle: any, index: any){
 
 </script>
 <div style="width: auto !important; height: 96vh !important; overflow: hidden;">
-<Toolbar onOption={selectToolbarOption}/>
+<Toolbar theme={theme} onOption={selectToolbarOption}/>
 
 
 {#if action == "adding_node"}
-<Add_Node onConfirm={confirmNode} onClose={() => action = null} available_characters={characters}/>
+<Add_Node poses={characters} onConfirm={confirmNode} onClose={() => action = null} available_characters={characters}/>
 {/if}
 {#if action == "editing_node"}
 <EditNode onSaveNode={confirmEditNode} onClose={() => action = null} available_characters={characters} current_node={current_editing_node}/>
@@ -386,15 +437,15 @@ function selectToolbarOption(bundle: any, index: any){
 <AddScene onConfirm={confirmScene} onClose={() => action = null} available_bg={all_scenes}/>
 {/if}
 {#if action == "adding_character"}
-<AddCharacter onConfirm={confirmScene} onClose={() => action = null}/>
+<AddCharacter  onConfirm={confirmCharacter} onClose={() => action = null}/>
 {/if}
 {#if action == "adding_text"}
 <AddText onConfirm={confirmText} onClose={() => action = null}/>
 {/if}
-<div class="main_container">
+<div class="main_container {theme}">
    <div class="left_container"> 
- <Assets fonts={fonts} images={assets} scenes={scenes} audio={audio} characters={characters}/>
-<Attributes hasBgm={scenes[seeing].bgm != "none"? true : false} audio={audio} onUpdateBg={updateCurrentBg} bind:logo_x={game_logo_xy.x} bind:logo_y={game_logo_xy.y} bind:seeing={seeing} bind:scenes={scenes} bind:current_bg={scenes[seeing].bg} bind:current_logo={game_logo} images={images} bind:menu_buttons={menu_buttons} bind:menu_button_color={menu_button_color} bind:menu_button_size={menu_button_size} currently_inspecting={currently_inspecting} items={items} bind:balloon_bg={balloon_bg} bind:balloon_border={balloon_border} bind:balloon_color={balloon_color} bind:menu_padding_left={menu_padding_left} bind:menu_padding_top={menu_padding_top}/>
+ <Assets theme={theme} fonts={fonts} images={assets} scenes={scenes} audio={audio} characters={characters}/>
+<Attributes theme={theme} hasBgm={scenes[seeing].bgm != "none"? true : false} audio={audio} onUpdateBg={updateCurrentBg} bind:logo_x={game_logo_xy.x} bind:logo_y={game_logo_xy.y} bind:seeing={seeing} bind:scenes={scenes} bind:current_bg={scenes[seeing].bg} bind:current_logo={game_logo} images={images} bind:menu_buttons={menu_buttons} bind:menu_button_color={menu_button_color} bind:menu_button_size={menu_button_size} currently_inspecting={currently_inspecting} items={items} bind:balloon_bg={balloon_bg} bind:balloon_border={balloon_border} bind:balloon_color={balloon_color} bind:menu_padding_left={menu_padding_left} bind:menu_padding_top={menu_padding_top}/>
 </div>
     <div class="right_container">
         <div class="switch">
@@ -402,16 +453,26 @@ function selectToolbarOption(bundle: any, index: any){
             <button class={display == 1? `switch_not_active` : `switch_active`} on:click={() => setDisplay(1)}>☍ Event Nodes</button>
             
             <button class={display == 2? `switch_not_active` : `switch_active`} on:click={() => {setDisplay(2); code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)}}>⌨ Scripting</button>
+      {#if display !== 2}
+  <div style="display: flex; align-items: center; gap: 8px; padding: 10px;">
+    <span>♫</span>
+    <NativeSelect
+      data={audio.map(track => ({ label: track.title, value: track.file }))}
+      placeholder="Pick one"
+      bind:value={scenes[seeing].bgm}
+      label=""
+      size="xs"
+    />
+  </div>
+{/if}
         </div>
 <div class="scene_preview">
-
 
 
     {#if display == 0}
 
 
    
-
     {#each text as txt, index}
     {#if txt.scene === scenes[seeing].title}
         <strong  style="margin-left: {txt.x}px; top: {txt.y + 3.0}px; font-size: {txt.font_size * 3.3}px; position: absolute; color: {txt.color}">{txt.value}</strong>
@@ -420,23 +481,20 @@ function selectToolbarOption(bundle: any, index: any){
 
 {#each assets as asset, index}
 {#if asset.scene === scenes[seeing].title}
-<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={asset.src.replace(/'/g, ' ')}/>
+<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={scene_nodes[seeing].data[0].text}/>
 {/if}
 {/each}
 
     <img  style={`border: ${currently_inspecting == 4 ? '3px solid white' : 'none'}`}   on:click={() => currently_inspecting = 4} class="scene_bg" src={scenes[seeing].bg} alt="scene"/>
     
 {#if seeing != 0}
+{#if scene_nodes[seeing].data[0]}
+<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={scene_nodes[seeing].data[0].file}/>
 
-<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={neutral00}/>
-
-<div on:click={() => currently_inspecting = 1} style="background-color: {balloon_style.bg}; border: {balloon_style.border}" class="balloon">
-<div style="background-color: rgba(0,0,0,0.7);">Character Name</div>
-    <strong style="color: {balloon_style.color} !important; margin-left: 1%; padding-top: 10px;">This is how your dialogue will show.</strong>
-
-    
-</div>
-
+<div on:click={() => currently_inspecting = 1} style="background-color: {balloon_style.bg}; border: {balloon_style.border}" class="balloon"> <div style="background-color: rgba(0,0,0,0.7);">
+    {scene_nodes[seeing].data[0].character}</div>
+     <strong style="color: {balloon_style.color} !important; margin-left: 1%; padding-top: 10px;">{scene_nodes[seeing].data[0].text}</strong> </div>
+{/if}
 
 
 {:else if seeing == 0}
@@ -479,6 +537,8 @@ function selectToolbarOption(bundle: any, index: any){
 <textarea bind:value={code} spellcheck="false" class="code_area"></textarea>
 
 {/if}
+
+
 </div>
 <div class="scenes">
 {#each scenes as scene, index}

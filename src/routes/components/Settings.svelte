@@ -10,7 +10,7 @@ import { invoke } from '@tauri-apps/api/tauri';
   
     $: auto_save = true;
    export let theme: string;
-    $: language = "English";
+  export let language: string;
     $: save_path = "C:\\Novelty\\Projects";
     $: auto_update = false;
     export let onClose: any;
@@ -87,15 +87,15 @@ onSaveSettings(
       <p></p>
       <Checkbox
         bind:checked={auto_update}
-        label="Allow Novelty to look for updates"
+        label={l.alfu}
       />
     </div>
     <div class="footer">
       <Button on:click={onClose} style="margin-right: 0.5rem;" variant='gradient' gradient={{from: 'red', to: 'orange', deg: 60}}>
-        Discard 
+      {l.dis}
       </Button>
       <Button on:click={save} variant='gradient' gradient={{from: 'teal', to: 'blue', deg: 60}}>
-        Save
+    {l.save}
       </Button>
     </div>
   </div>

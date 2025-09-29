@@ -93,14 +93,19 @@ fn window_conf() -> Conf {
   `
 
 }
-
 //turn each scene into a texture variable
+if(parsed[i].substring(0, 2) == "bg"){
+  const cleaned = thisLine[1].replace(/'/g, "");
+  total_images.push(cleaned);
+
+user_define = user_define + `
+\nlet ${cleaned.replace(".png", "")}: Texture2D = load_texture(\"assets/scenes/${cleaned}\").await.unwrap();
+`
+}
 if(parsed[i].includes("scene")){
   total_scenes.push(thisLine[1]);
 
 user_define = user_define + `
-\nlet ${thisLine[1]}: Texture2D = load_texture(\"assets/scenes/${thisLine[1]}.png\").await.unwrap();
-
 \nlet mut ${thisLine[1]}_index = 0;`
 }
 
@@ -108,8 +113,12 @@ user_define = user_define + `
 if(parsed[i].includes("char")){
   total_characters.push(thisLine[1]);
 
+}
+if(parsed[i].includes("add_pose")){
+  total_images.push(thisLine[2]);
+
 user_define = user_define + `
-\nlet ${thisLine[1]}: Texture2D = load_texture(\"assets/characters/${thisLine[1]}/neutral.png\").await.unwrap();
+\nlet ${thisLine[2]}: Texture2D = load_texture(\"assets/characters/${thisLine[0].split(".")[0]}/poses/${thisLine[3]}\").await.unwrap();
 `
 }
 
@@ -123,7 +132,6 @@ console.log("all theh scenes: "+ total_scenes)
     if (full_parse.length >= 2) {
       let scene_name = full_parse[0].trim();  
       let text = full_parse[1].trim();  
-       console.log("indubitably")
      let mood = full_parse[2].substring(1).trim().split(',')[1].split(':')[1]
      let character = full_parse[2].substring(1).trim().split(',')[0].split(':')[1]
    
@@ -154,10 +162,8 @@ console.log("all theh scenes: "+ total_scenes)
   
   }
   
-  if(parsed[i].includes("audio") || parsed[i].includes("music")){
-    total_audio.push(thisLine[1]);
-  
-    
+  if(parsed[i].includes("audio")){
+    total_audio.push(thisLine[1].replace("'", ""));
   user_define = user_define + `\nlet ${thisLine[1]} = audio::load_sound(\"assets/audio/${thisLine[1]}.ogg\").await.unwrap();\n`
   
   }
@@ -181,17 +187,22 @@ console.log("all theh scenes: "+ total_scenes)
   
   } 
   }
-  
-  user_define = user_define + `\nlet scenes = [${total_scenes}]; \n`
+ user_define += `\nlet scenes = [${total_scenes.map(s => `"${s}"`).join(", ")}];\n`;
   if(total_images.length > 0){
-  user_define = user_define + `\nlet images = [${total_images}]; \n`
+   user_define += `\nlet bg = [${total_images.map(s => `"${s}"`).join(", ")}];\n`;
   }
   user_define = user_define + `\nlet mut current_scene = 0; \n`
   
   user_define = user_define + `\nlet mut whos_talking = "Guy"; \n`
   
   
-  
+ const sceneData = total_scenes.map((scene, idx) => ({
+  name: scene,
+  bg: total_images[idx] ?? ""
+}));
+sceneData.forEach((s, i) => {
+  user_define += `\nlet ${s.name}_texture: Texture2D = load_texture("assets/scenes/${s.bg}").await.unwrap();\n`;
+});
   
   console.log(functions)
   //every action will be turned into rust code here. including the whole rendering pipeline.
@@ -224,6 +235,7 @@ console.log("all theh scenes: "+ total_scenes)
   
    
   if(functions[j].method.trim() == "play_bgm"){
+    
     console.log(functions[j].params + "playing")
     user_loop = user_loop + `\n
            if !music_playing {
@@ -242,10 +254,10 @@ console.log("all theh scenes: "+ total_scenes)
   if (functions[j].method.trim() == "draw_background") {
         
         console.log("drawing_bg...")
-        user_loop = user_loop + `\n \n draw_texture_ex(&scenes[${i}], 0., 0., WHITE,   DrawTextureParams {
+        user_loop += `draw_texture_ex(&${sceneData[i].name}_texture, 0., 0., WHITE, DrawTextureParams {
             dest_size: Some(vec2(screen_width(), screen_height())),
             ..Default::default()
-          },); \n`
+        });\n`;
         }else if (functions[j].method.trim().includes("write")){
           var parsed_text_params = functions[j].params.trim().replace(/'/g, '"').split(',');
           console.log(parsed_text_params)
@@ -266,10 +278,11 @@ console.log("all theh scenes: "+ total_scenes)
           },); \n` }
         
       else if (functions[j].method.trim() == "say"){
+        
         var who = functions[j].params.trim().split(', ')
-        var actually_Who = who[1].split(":")
+        var actually_Who = who[2].split(":")
         console.log("this is who ")
-        console.log(actually_Who[1])
+        console.log(actually_Who)
         var parsed_text_params = functions[j].params.trim().replace(/'/g, ' ').split(',');
         user_loop = user_loop + `\n \n draw_texture_ex(&${actually_Who[1]}, screen_width() / 1.7, screen_height() / 6.0, WHITE,   DrawTextureParams {
           dest_size: Some(vec2(screen_width() / 2.2, screen_height() / 1.2)),

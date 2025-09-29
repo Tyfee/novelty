@@ -5,5 +5,22 @@
     "t": "Studio Theme",
     "as": "Enable Auto-Save",
     "rp": "Recent Projects",
-    "nny": "You don't have any novels yet!"
+    "nny": "You don't have any novels yet!",
+    "alfu": "Allow Novelty to look for updates on it's own",
+    "dis": "Discard",
+    "save": "Save",
+    "cpfs": "CREATE NEW PROJECT FROM SCRATCH",
+    "oep": "OPEN EXISTING PROJECT",
+    "gfvl": "GET FULL VERSION LICENSE",
+    "kp": "Keep Writing",
+    "ep": "Edit Project",
+    "dup": "Duplicate Project",
+    "dep": "Delete Project",
+    "cnp": "Create New Project",
+    "bla": "Blank",
+    "cop": "Complete Game",
+    "pn": "Project Name",
+    "pn_ph": "What will you name your new project?",
+    "pd": "Project Description",
+    "pd_ph": "What is your new game about?"
 }]

@@ -22,10 +22,12 @@ export let logo_y: any;
 export let current_bg: string;
 export let onUpdateBg: any;
 export let hasBgm: boolean;
+
+export let theme: string;
 let mapped_audio = audio.map((i) => i.file)
 let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
 </script>
-<div class="assets attributes theme-black">
+<div class="assets attributes {theme}">
     <strong>🛈 Inspecting: {inspectable[currently_inspecting]}</strong>
     {#if currently_inspecting == 0}
 
@@ -36,7 +38,7 @@ let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
     <!--Dialogue -->
     {:else if currently_inspecting == 1}
     <Accordion>
-        <Accordion.Item value="typescript">
+        <Accordion.Item   class="accordion_item {theme}" value="typescript">
             <div slot="control">Color</div>
    
     <NativeSelect data={['pink', 'green', 'red', 'white', 'cyan']} 
@@ -57,7 +59,7 @@ let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
     />
     </Accordion.Item>
 
-        <Accordion.Item value="animation">
+    <Accordion.Item   class="accordion_item {theme}" value="animation">
             <div slot="control">Animation</div>
     <Checkbox color="black" label="Allow typewriter effect in my game "  />
 
@@ -66,7 +68,7 @@ let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
     {:else if currently_inspecting == 2}
     
     <Accordion>
-        <Accordion.Item value="typescript">
+        <Accordion.Item   class="accordion_item {theme}"value="typescript">
             <div slot="control">⚌ Menu Items</div>
    
     <div class="attribute">
@@ -75,7 +77,7 @@ let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
     
     </Accordion.Item>
 
-    <Accordion.Item value="position">
+    <Accordion.Item   class="accordion_item {theme}" value="position">
         <div slot="control">⛚ Position</div>
 
         <div class="slider-container">
@@ -91,7 +93,7 @@ let inspectable = ["Game", "Dialog Box", "Menu Buttons", "Game Logo", "Scene"]
         </div>
         </Accordion.Item>
 
-    <Accordion.Item value="text">
+        <Accordion.Item   class="accordion_item {theme}"value="text">
         <div slot="control">♥ Text Attributes</div>
         <div class="slider-container">
             <p>Font Size</p>

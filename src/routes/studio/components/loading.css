@@ -1,0 +1,16 @@
+.loading_container{
+    position: absolute;
+    z-index: 10;
+    width: 30vw;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    text-align: center;
+    font-size: 0.5em;
+    height: 200px;
+    background-color: white;
+    left: 35vw;
+    top: 25vh;
+    border: 2px solid black;
+    box-shadow: 0 0 10px 5000px rgba(0, 0, 0, 0.774);
+}

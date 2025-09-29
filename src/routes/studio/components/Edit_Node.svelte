@@ -5,7 +5,8 @@ let thisText = current_node.text;
 export let onSaveNode: any;
 export let onClose: any;
 export let available_characters;
-
+$: poses = ["Neutral"]
+let pose: any = "Neutral"
 let action_type: any = "Dialogue";
 export let text: string = thisText;
 
@@ -44,7 +45,11 @@ bind:value={text}
 
 />
 {/if}
-
+<NativeSelect
+  data={poses}
+  bind:value={pose}
+  label="Pose"
+/>
 {#if action_type == "Multiple Choice"}
 
 <Textarea

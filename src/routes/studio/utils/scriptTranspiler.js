@@ -19,13 +19,32 @@ menu_info = main_menu_info;
 // turn every scene into a variable;
 //ex scene.name = "scene 1" becomes "scene scene_1;"
 scenes.map((i) => source_code = source_code + "scene " + i.title + ";\n");
-scenes.map((i) => source_code = source_code + "bg " + `'${i.bg}'` + ";\n");
+scenes.map((i) => source_code = source_code + "bg " + `'${i.bg.split("/").pop()}'` + ";\n");
 source_code = source_code + "\n";
-characters.map((i) => source_code = source_code + "char " + i.name + ";\n");
+characters.map((i) =>{i.id !== "null" ? source_code = source_code + "char " + i.name + " " + i.id + ";\n": "\n"} );
+characters.forEach(c => {
+  
+{c.id !== "null" ?  c.poses.forEach(p => {
+    const file_name = p.file.split("/").pop();
+
+    source_code += `${c.id}.add_pose -> ${p.name} ${file_name};\n`;
+  }) : console.log("Null")}
+}
+);
+
+
 source_code = source_code + "\n";
 assets.map((i) => source_code = source_code + "img " + i.title + ";\n");
 
-audio.map((i) => source_code = source_code + "audio " + i.title + ";\n");
+
+audio.map((i) => {
+  if(i.title != "no_music"){
+  source_code = source_code + "audio " + i.title + ";\n"
+}
+  else{
+
+  }}
+);
 
 //ad
 for(var i = 0; i < scenes.length; i++){
@@ -33,7 +52,7 @@ for(var i = 0; i < scenes.length; i++){
 
 //music stuff
 for(var m = 0; m < scenes.length; m++){
-  if(scenes[m].bgm != 'none'){
+  if(scenes[m].bgm != 'no_music'){
   source_code = source_code + "\n" + `${scenes[m].title}.play_bgm -> '${scenes[m].bgm}'; \n`
   }}
 
@@ -41,7 +60,7 @@ for(var m = 0; m < scenes.length; m++){
 
           //add the main_menu logo data:
           for(var s = 0; s < scenes.length; s++){
-          source_code = source_code + "\n" + `${scenes[s].title}.draw_background -> src: '${scenes[s].bg}'; \n`
+          source_code = source_code + "\n" + `${scenes[s].title}.draw_background -> src: '${scenes[s].bg.split("/").pop()}'; \n`
           }
           for(var h = 0; h < assets.length; h++ ){
             if(assets[h].scene == scenes[i].title){

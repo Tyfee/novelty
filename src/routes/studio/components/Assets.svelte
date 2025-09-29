@@ -6,6 +6,7 @@ export let audio
 export let scenes
 export let images
 export let fonts
+export let theme: string;
 let open_tabs = [0, 1]
 
 function toggleDisplay(index: any){
@@ -19,43 +20,43 @@ function toggleDisplay(index: any){
 
 </script>
 
-<div class="assets theme-dark">
+<div class="assets {theme}">
     🗎 Assets Management
 
 
     <Accordion>
-        <Accordion.Item value="typescript">
+        <Accordion.Item class="accordion_item {theme}" value="typescript">
           <div slot="control">Scenes</div>
           
     {#each scenes as scene, index}
-          <p class="asset">⛶ {scene.title}</p>
+          <p class="asset {theme}">⛶ {scene.title}</p>
           {/each}
         </Accordion.Item>
-        <Accordion.Item value="packed">
+        <Accordion.Item   class="accordion_item {theme}" value="packed">
           <div slot="control">Characters</div>
           {#each characters as character, index}
           <p class="asset">☺ {character.name}</p>
           {/each}
         </Accordion.Item>
-        <Accordion.Item value="accessible">
+        <Accordion.Item  class="accordion_item {theme}" value="accessible">
           <div slot="control">Audio</div>
           {#each audio as audi, index}
        
     <p class="asset">♫ {audi.title}</p>
-          {/each}  </Accordion.Item>
+          {/each}  </Accordion.Item >
 
 
 
-          <Accordion.Item value="images">
+          <Accordion.Item   class="accordion_item {theme}" value="images">
             <div slot="control">Images</div>
             {#each images as image, index}
             <p class="asset">☺ {image.title}</p>
             {/each}
-          </Accordion.Item>
+          </Accordion.Item >
 
 
           
-          <Accordion.Item value="fonts">
+          <Accordion.Item  class="accordion_item {theme}" value="fonts">
             <div slot="control">Fonts</div>
             {#each fonts as font, index}
             <p class="asset">⯑ {font}</p>

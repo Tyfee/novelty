@@ -5,5 +5,23 @@
     "t": "Tema do Estúdio",
     "as": "Permitir Auto-Save",
     "rp": "Projetos Recentes",
-    "nny": "Você ainda não escreveu nenhuma novel!"
+    "nny": "Você ainda não escreveu nenhuma novel!",
+    "alfu": "Permitir que o Novelty busque atualizações por conta própria",
+    "dis": "Cancelar",
+    "save": "Salvar",
+    "cpfs": "CRIAR NOVO PROJETO EM BRANCO",
+    "oep": "ABRIR PROJETO EXISTENTE",
+    "gfvl": "LICENÇA DA VERSÃO COMPLETA",
+    "kp": "Continuar Escrevendo",
+    "ep": "Editar Projeto",
+    "dup": "Duplicar Projeto",
+    "dep": "Deletar Projeto",
+    "cnp": "Criar Novo Projeto",
+    "bla": "Em branco",
+    "cop": "Jogo Completo",
+    "pn": "Nome do Projeto",
+    "pn_ph": "Qual vai ser o nome do seu novo projeto?",
+    "pd": "Descrição do Projeto",
+    "pd_ph": "Sobre o que é o seu novo jogo?"
+
 }]

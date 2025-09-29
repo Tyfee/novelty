@@ -17,6 +17,7 @@
     "@material/select": "^14.0.0",
     "@material/theme": "^14.0.0",
     "@material/typography": "^14.0.0",
+    "@smui/circular-progress": "^6.0.0",
     "@smui/common": "^7.0.0",
     "@smui/dialog": "^8.0.0-beta.3",
     "@smui/icon-button": "^6.1.4",

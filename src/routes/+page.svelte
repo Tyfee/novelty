@@ -17,12 +17,14 @@ import fr from '../lang/fr-FR.json'
 import es from '../lang/es.json'
     import Popup from "./components/Popup.svelte";
     import toast, { Toaster } from "svelte-french-toast";
+    import Loading from "./studio/components/Loading.svelte";
 function navigate(project_name: string){
   goto(`/studio/${project_name}`)
   console.log(project_name)
 }
 
-
+let loading_stage: number = 0;
+let doing: string = "";
 async function editProject(newName: string, newDescription: string){
   let path = "C:\\Novelty\\Projects"
   console.log(currently_editing)
@@ -41,17 +43,23 @@ async function editProject(newName: string, newDescription: string){
 }
 async function duplicateProject(name: string, description: string){
 let path = "C:\\Novelty\\Projects"
-
-
+loading_stage = 1;
+doing = "Duplicating project " + {name} + "..."
+console.log(loading_stage)
 try {
-  await invoke("create_project", {path, name: `${name}2`, description: description})
-toast.success("Project duplicated!")
+  
+console.log(loading_stage)
+ 
+  await invoke("create_project", {path, name: `${name}_copy`, description: description})
+  loading_stage = 0;
+  toast.success("Project duplicated!")
 
 my_projects = await fetchProjects();
 }
 catch(error){
+  loading_stage = 0;
   console.log('The project was not able to be duplicated: ', error);
-
+  toast.error("Project could not be duplicated! Error: " + error )
 }
  }
 
@@ -121,8 +129,8 @@ onMount(async () => {
    console.log(json_data)
    saved_settings = json_data
    theme = json_data[0].theme;
-   
- 
+   console.log(json_data[0].language)
+ current_language = language_map[0][json_data[0].language]
   }
 
 
@@ -132,7 +140,7 @@ onMount(async () => {
 
 function setTheme(theme_name: string){
 theme = theme_name
-console.log(theme)
+console.log("this is the theme " + theme)
 }
 $: current_language = en
 $: l = current_language[0]
@@ -148,7 +156,7 @@ const language_map = [{
   let name = "";
   let greetMsg = "";
 
-$: creating_new_project = false;
+$: creating_new_project = true;
 $: editing_project = false;
 $: seeing_settings = false;
 let project_name = "";
@@ -166,10 +174,11 @@ current_language = language_map[0][language]
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     greetMsg = await invoke("greet", { name });
   }
-
   async function create_project(project_name: string, description: string){
     const path = "C:\\Novelty\\Projects";
+loading_stage = 1;
 
+doing = "Creating new project " + {project_name} + "..."
   try {
     await invoke("create_project", { path, name: project_name, description: description });
     console.log("Project created successfully");
@@ -177,7 +186,9 @@ current_language = language_map[0][language]
 
     navigate(project_name)
     creating_new_project = false;
+    loading_stage = 0;
   } catch (error) {
+    loading_stage = 0;
     console.error("Error creating project:", error);
   }
 
@@ -204,21 +215,30 @@ seeing_settings = false;
 }
 </script>
 <div class={`main_container ${theme}`}>
-  
+   {#if loading_stage == 1}
+
+   <Loading theme={theme} doing={doing}/>
+   {/if}
 <Toaster />
   {#if creating_new_project}
-    <Create_Project theme={theme} onConfirm={startProject} onClose={() => creating_new_project = false}/>
+    <Create_Project
+    current_language={current_language} 
+    theme={theme} onConfirm={startProject} onClose={() => creating_new_project = false}/>
   {/if}
   {#if editing_project}
     <EditProject desc={currently_editing.description} text={currently_editing.title} onConfirm={editProject} onClose={() => editing_project = false}/>
   {/if}
   {#if seeing_settings}
-    <Settings onSaveSettings={applySettings} onChooseTheme={setTheme} theme={theme} current_language={current_language} onChooseLanguage={changeLanguage} onClose={() => 
+    <Settings onSaveSettings={applySettings} onChooseTheme={setTheme} theme={theme} current_language={current_language} 
+    language={saved_settings[0].language}
+    onChooseLanguage={changeLanguage} onClose={() => 
     {seeing_settings = false;
     theme = saved_settings[0].theme
+    current_language = saved_settings[0].language
     }}/>
   {/if}
 <div class={`container ${theme}`}>
+
   <h1>{l.rp}</h1>
 
   <div class={`projects_container ${theme}`}>
@@ -254,19 +274,19 @@ seeing_settings = false;
 	{project.description}</Text>
 
 	<Button on:click={() => navigate(project.title)} variant='light' color='green' fullSize>
-		Keep Writing
+		{l.kp}
 	</Button>
   <Button  on:click={() => {editing_project = true; currently_editing = project}} variant='light' color='yellow' fullSize>
-		Edit Project
+    {l.ep}
 	</Button>
 
   <Button on:click={() => duplicateProject(project.title, project.description)} variant='light' color='blue' fullSize>
-		Duplicate Project
+    {l.dup}
 	</Button>
   <Button on:click={() =>{
      deleteProject(project.title);
   }} variant='light' color='red' fullSize>
-		Delete Project 
+			{l.dep}
 	</Button>
   
 </Card>
@@ -276,10 +296,10 @@ seeing_settings = false;
 
 </div>
 <div class="container2">
-  <button on:click={() => creating_new_project = true} class="menu_btn {theme}">CREATE NEW PROJECT FROM SCRATCH</button>
- <p></p> <button on:click={open_project} class="menu_btn {theme}">OPEN EXISTING PROJECT</button>
- <p></p><button class="menu_btn {theme}" on:click={() => { seeing_settings = true; creating_new_project = false; }}>{(l.s).toUpperCase()}</button>
- <p></p> <button class="menu_btn {theme}">GET FULL VERSION LICENSE</button>
+  <button on:click={() => creating_new_project = true} class="menu_btn {theme}">{l.cpfs}</button>
+ <p></p> <button on:click={open_project} class="menu_btn {theme}">{l.oep}</button>
+ <p></p><button class="menu_btn {theme}" on:click={() => { seeing_settings = true; creating_new_project = false; }}>{(l.s)?.toUpperCase()}</button>
+ <p></p> <button class="menu_btn {theme}">	{l.gfvl}</button>
 </div>
 
 <div class="logo_container">

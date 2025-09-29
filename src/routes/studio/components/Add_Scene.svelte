@@ -5,6 +5,7 @@ let value: any;
 let text: string = '';
 export let onClose: any;
 export let onConfirm: any;
+export let theme: string;
 let selected = 0;
 </script>
 
@@ -16,10 +17,17 @@ let selected = 0;
   label="Scene Name"
   bind:value={text}
 />
-<h5>Scene Background</h5>
+<h5 class="popup_title {theme}">Scene Background</h5>
+
+<div style="overflow-x: scroll !important;border: 2px solid black;display: flex; width: 100%;">
 {#each available_bg as bg, index}
-<img style="cursor: pointer; border: {index == selected? "2px solid green" : "none"}" on:click={() => selected = index} width="160px" alt="Background Image" src={bg}/>
+<img 
+style="cursor: pointer; border: {index == selected? "2px solid green" : "none"}" on:click={() => selected = index} width="160px" alt="Background Image" src={bg}/>
 {/each}
+<!-- on click on the add should add the uploaded image to the available_bg array-->
+<div style="flex: 0 0 auto;" class="solid"></div>
+<div style="flex: 0 0 auto;" class="add">+</div>
+</div>
 <p>
   
 
@@ -37,3 +45,20 @@ let selected = 0;
 </div>
 
 
+<style>
+  .add{
+    border: 2px solid black;
+    width: 160px;
+    text-align: center;
+    align-items: center;
+    align-content: center;
+    font-size: 2vw;
+    cursor: pointer;
+  }
+
+  .solid{
+    width: 160px;
+    cursor: pointer;
+    background-color: black;
+  }
+</style>

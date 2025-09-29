@@ -7,6 +7,10 @@
     import { Label } from '@smui/common';
     let current_template = 0;
     let current_logo = logo;
+    export let current_language;
+
+
+    $: l = current_language[0]
     let targeted = ['win']
         let value: any;
         let text: string = '';
@@ -27,7 +31,7 @@
       
       <div style="overflow-x: hidden;" class="modal">
         <div class="title-bar {theme}">
-          <h1>Create New Project</h1>
+          <h1>{l.cnp}</h1>
           <button on:click={onClose}>&times;</button>
         </div>
         <div class="content">
@@ -36,12 +40,12 @@
         <div class="template_block">
                 <div style={`
                 border: 2px solid ${current_template == 0? 'teal' : 'black'};`} on:click={() => current_template = 0} class="template"></div>
-              <strong style="color: black">  Blank</strong>
+              <strong style="color: black"> {l.bla}</strong>
         </div>
         <div class="template_block">
           <div style={`
                 border: 2px solid ${current_template == 1? 'teal' : 'black'};`} on:click={() => current_template = 1} class="template"></div>
-             <strong style="color: black">   Complete Game</strong>
+             <strong style="color: black">  {l.cg}</strong>
         </div>
 </div>
 <p style="margin-top: 40px !important;"></p>
@@ -49,16 +53,16 @@
         <img class="project_icon" src={current_logo}/>
           <TextInput
            style="width: 40vw;"
-            placeholder="What will you name your new project?"
-            label="Project name"
+            placeholder={l.pn_ph}
+            label={l.pn}
             bind:value={text}
           />
         </div>
         <p></p>
         <TextInput
         style="width: 100%;"
-         placeholder="What is your new game about?"
-         label="Project description"
+         placeholder={l.pd_ph}
+         label={l.pd}
          bind:value={desc}
        />
 
@@ -74,7 +78,7 @@ bind:value={targeted}
         </div>
         <div class="footer">
           <Button on:click={onClose} style="margin-right: 0.5rem;" variant='gradient' gradient={{from: 'red', to: 'orange', deg: 60}}>
-            Close
+            {l.dis}
           </Button>
           <Button on:click={createNewProject} variant='gradient' gradient={{from: 'teal', to: 'blue', deg: 60}}>
             Create New Project
