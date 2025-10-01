@@ -16,7 +16,7 @@ import neutral00 from '../../../assets/chars/neutral00.png'
 import logo from '../../../assets/utils/logo.png'
     import AddScene from "../components/Add_Scene.svelte";
 import Toolbar from '../components/Toolbar.svelte'
-import {NativeSelect, Checkbox, CheckboxGroup, Title} from "@svelteuidev/core" 
+import {NativeSelect, Checkbox, CheckboxGroup, Title, Button, Text} from "@svelteuidev/core" 
 import transpileToScript from '../utils/scriptTranspiler'
 import buildAndRun from '../utils/build_and_run'
 import build from "../utils/build";
@@ -27,18 +27,18 @@ import build from "../utils/build";
     import AddCharacter from "../components/Add_Character.svelte";
     import { onMount } from "svelte";
     import transpileToRust from "../utils/rustTranspiler";
-    import toast from 'svelte-french-toast';
+    import toast, { Toaster } from 'svelte-french-toast';
 
 
 
+  let path = "C:\\Novelty\\"
     let current_editing_node: any;
     let theme: string;
     let current_editing_node_index: any;
     const all_scenes = [bg00, bg01]
-   let code: string;
+   $: code =  "";
   $: scenes = [
-    {title: "main_menu", bg: bg00, id: 0, bgm: 'no_music'},
-   {title: "first", bg: bg01, id: 1, bgm: 'no_music'}
+    
 ];
 
 
@@ -107,23 +107,108 @@ let project_name: string;
 
 
 
+async function parse_script(code: string){
+   const parsed_code = code.split("\n")
+   var scenes_: any[] = [];
+   var chars_: any[] = [];
 
+   for(var i = 0; i < parsed_code.length; i++){
+       console.log(parsed_code[i])
+       if(parsed_code[i].slice(0, 5) == "scene"){
+          const scene_ = {title: parsed_code[i].split(" ")[1].replace(";", ""), bg: null, id: 0, bgm: ' '}
+          scenes_.push(scene_)
+       }else if(parsed_code[i].slice(0, 4) == "char"){
+         const char_name_ = parsed_code[i].split(" ")[1];
+         const char_id_ = parsed_code[i].split(" ")[2].replace(";", "");
+         const char_ =  { name: char_name_, id: char_id_, poses: [{}]}
+          chars_.push(char_)
+ 
+           await invoke("create_character", {
+      projectName: project_name,
+      name: char_name_,
+      id: char_id_,
+      files: [""],
+    })
+       }
+      else if(parsed_code[i].slice(0, 5) == "bg"){
+     
+       } else if(parsed_code[i].split("->")[0].includes("draw_background")){
+
+            const draw_to_ = parsed_code[i].split("->")[0].split(".")[0].trim();
+    const draw_bg_ = parsed_code[i].split("->")[1].split(":")[1].replace(/'/g,"").replace(";","").trim();
+
+    const bgMap = { BG02: bg00, bg01: bg01 }; 
+
+    scenes_ = scenes_.map(scene =>
+      scene.title.trim() === draw_to_
+        ? { ...scene, bg: bg00 }
+        : scene
+    );
+
+    console.log("Updated scenes inside loop:", scenes_);
+  } else if(parsed_code[i].split("->")[0].split(".")[1] == "say"){
+    const node_scene = parsed_code[i].split("->")[0].split(".")[0];
+    console.log("falar " + node_scene)
+      const node = {
+            scene: scenes[seeing].title,
+            type: thisType,
+            character: character,
+            text: text,
+            options: actionArray,
+            x: (2 * (characters.length + 1)), 
+            y: 20,
+            mood: pose,
+            file: poseFile
+        };
+
+        if (!Array.isArray(scene_nodes[seeing].data)) {
+            scene_nodes[seeing].data = [];
+        }
+
+        // Add the node to the current scene
+        scene_nodes[seeing].data = [...scene_nodes[seeing].data, node];
+
+  }
+}
+
+scenes = [...scenes_];
+characters = [...chars_];
+
+}
+
+async function run_dlt(code_: string){
+  parse_script(code);
+   await invoke('save_dlt', {
+      projectName: project_name, code: code_
+    }).then(()=> {
+      
+      toast.success("Código executado com sucesso!")
+    })
+
+}
 
   onMount(async () => {
     setWindowTitle(project_name);
     
   let settings: any[]; 
+  let source: string;
 
-  let path = "C:\\Novelty\\"
+  
+  let project_path = `C:\\Novelty\\Projects\\${project_name}\\`;
   settings = await invoke("fetch_settings", {path: path})
+  
+  code = await invoke("fetch_source", {path: project_path})
 
    let json_data = JSON.parse(settings)
    console.log(json_data)
+
+   
 
    theme = json_data[0].theme;
    
 
     load_nvl()
+    parse_script(code)
   });
 setWindowTitle('current_project.nvl*');
     let menu_buttons: any = ['start']
@@ -190,6 +275,7 @@ function confirmScene(text: string, background: any){
         bgm: 'No Music'
     }
     scenes = [...scenes, new_scene]
+    code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
 action = null;
 }
 
@@ -236,6 +322,7 @@ async function confirmCharacter(name: string, poses: { file: string; name: strin
     }).then((data) => console.log(data));
 
     characters.push(new_character); 
+    code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
   }
 }
 
@@ -353,6 +440,7 @@ let actionArray: any = []
         console.log('After update:', scene_nodes);
 
         action = null;
+        code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
     }
 
     $: current_scene_nodes = scene_nodes[seeing].data;
@@ -394,7 +482,7 @@ function selectToolbarOption(bundle: any, index: any){
     }
     if(bundle == 2 && index == 2){
       let delight_code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio);
-       
+       code = delight_code;
       let rust_code = transpileToRust(delight_code);
       if(project_name){
       buildAndRun(project_name, rust_code, delight_code)
@@ -423,6 +511,7 @@ function selectToolbarOption(bundle: any, index: any){
 
 </script>
 <div style="width: auto !important; height: 96vh !important; overflow: hidden;">
+  <Toaster/>
 <Toolbar theme={theme} onOption={selectToolbarOption}/>
 
 
@@ -445,33 +534,52 @@ function selectToolbarOption(bundle: any, index: any){
 <div class="main_container {theme}">
    <div class="left_container"> 
  <Assets theme={theme} fonts={fonts} images={assets} scenes={scenes} audio={audio} characters={characters}/>
+{#if scenes.length > 0}
 <Attributes theme={theme} hasBgm={scenes[seeing].bgm != "none"? true : false} audio={audio} onUpdateBg={updateCurrentBg} bind:logo_x={game_logo_xy.x} bind:logo_y={game_logo_xy.y} bind:seeing={seeing} bind:scenes={scenes} bind:current_bg={scenes[seeing].bg} bind:current_logo={game_logo} images={images} bind:menu_buttons={menu_buttons} bind:menu_button_color={menu_button_color} bind:menu_button_size={menu_button_size} currently_inspecting={currently_inspecting} items={items} bind:balloon_bg={balloon_bg} bind:balloon_border={balloon_border} bind:balloon_color={balloon_color} bind:menu_padding_left={menu_padding_left} bind:menu_padding_top={menu_padding_top}/>
+{/if}
 </div>
     <div class="right_container">
         <div class="switch">
             <button class={display == 0? `switch_not_active` : `switch_active`} on:click={() => setDisplay(0)}>⛫ Scene</button>
             <button class={display == 1? `switch_not_active` : `switch_active`} on:click={() => setDisplay(1)}>☍ Event Nodes</button>
             
-            <button class={display == 2? `switch_not_active` : `switch_active`} on:click={() => {setDisplay(2); code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)}}>⌨ Scripting</button>
+            <button class={display == 2? `switch_not_active` : `switch_active`} on:click={() => {setDisplay(2); }}>⌨ Scripting</button>
       {#if display !== 2}
   <div style="display: flex; align-items: center; gap: 8px; padding: 10px;">
-    <span>♫</span>
+ 
+ {#if scenes.length > 0}   <span>♫</span>
     <NativeSelect
       data={audio.map(track => ({ label: track.title, value: track.file }))}
       placeholder="Pick one"
       bind:value={scenes[seeing].bgm}
       label=""
       size="xs"
-    />
+    />  {/if}
+
+
   </div>
+
 {/if}
+
+    {#if display == 2}
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px;">
+ <Button color={'green'} on:click={() => 
+  run_dlt(code)
+  } ripple>
+  Run Code
+</Button>
+<Text>
+  {path}{project_name}\main.dlt
+</Text>
+</div>
+  {/if}
         </div>
 <div class="scene_preview">
 
 
     {#if display == 0}
 
-
+{#if scenes.length > 0}
    
     {#each text as txt, index}
     {#if txt.scene === scenes[seeing].title}
@@ -486,7 +594,7 @@ function selectToolbarOption(bundle: any, index: any){
 {/each}
 
     <img  style={`border: ${currently_inspecting == 4 ? '3px solid white' : 'none'}`}   on:click={() => currently_inspecting = 4} class="scene_bg" src={scenes[seeing].bg} alt="scene"/>
-    
+
 {#if seeing != 0}
 {#if scene_nodes[seeing].data[0]}
 <img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={scene_nodes[seeing].data[0].file}/>
@@ -496,7 +604,7 @@ function selectToolbarOption(bundle: any, index: any){
      <strong style="color: {balloon_style.color} !important; margin-left: 1%; padding-top: 10px;">{scene_nodes[seeing].data[0].text}</strong> </div>
 {/if}
 
-
+{/if}
 {:else if seeing == 0}
 
 <img  on:click={() => currently_inspecting = 3} style={`left: ${game_logo_xy.x}vw;top: ${game_logo_xy.y}vh; border: ${currently_inspecting == 3 ? '3px solid white' : 'none'}`} alt="logo from your game." src={game_logo} class="logo_preview"/>

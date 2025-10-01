@@ -395,8 +395,21 @@ async fn save_dlt(project_name: String, code: String) -> Result<(), String> {
     let source_path = base_path.join("main.dlt");
 
     write_file(source_path, &code).await
-    .map_err(|e| format!("We couldn't save your setting files! {}", e))?;
+    .map_err(|e| format!("We couldn't save your source code! {}", e))?;
     Ok(())
+}
+
+
+#[tauri::command]
+async fn fetch_source(path: String) -> Result<String, String>{
+
+let full_path = Path::new(&path).join("main.dlt");
+println!("Full path: {}", full_path.display());
+let settings = tokio_fs::read_to_string(full_path)
+.await
+.map_err(|e| format!("Error fetching source code: {}", e))?;
+
+Ok(settings)
 }
 
 fn main() {
@@ -416,6 +429,7 @@ fn main() {
           remove_temp_file,
           save_dlt,
           load_file,
+          fetch_source,
           load_nvl_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

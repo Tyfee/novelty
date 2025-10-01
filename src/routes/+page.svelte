@@ -2,8 +2,8 @@
 import {invoke} from "@tauri-apps/api/tauri"
 import '../themes.css'
   import { Button, Card, Group, Image, Text, Badge, ThemeIcon } from "@svelteuidev/core";
-  import bg00 from '../assets/bg/4258797.jpg'
-    import bg01 from '../assets/bg/bg01.jpg'
+  import bg00 from '../assets/bg/bg01.png'
+    import bg01 from '../assets/bg/BG02.png'
     import { goto } from "$app/navigation";
 import Create_Project from './components/Create_Project.svelte';
 import EditProject from "./components/Edit_Project.svelte";
