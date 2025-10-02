@@ -26,7 +26,8 @@
     "@svelteuidev/core": "^0.15.7",
     "@tauri-apps/api": "^1.5.0",
     "@tauri-apps/plugin-fs": "^2.2.1",
-    "svelte-french-toast": "^1.2.0"
+    "svelte-french-toast": "^1.2.0",
+    "svelte-highlight": "^7.8.4"
   },
   "devDependencies": {
     "@smui/button": "^7.0.0",

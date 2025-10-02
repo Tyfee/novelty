@@ -6,6 +6,7 @@
   import Node from '../components/Node.svelte'
   import '../components/modal.css'
   import { page } from '$app/stores';
+  import run from '../utils/run.js'
   import Add_Node from '../components/Add_Node.svelte'
   import EditNode from "../components/Edit_Node.svelte";
   import Add_Scene from '../components/Add_Scene.svelte'
@@ -28,25 +29,40 @@ import build from "../utils/build";
     import { onMount } from "svelte";
     import transpileToRust from "../utils/rustTranspiler";
     import toast, { Toaster } from 'svelte-french-toast';
+    import { event } from '@tauri-apps/api';
 
 
+  const tempPath = `/src/assets/temp_poses/`;
 
   let path = "C:\\Novelty\\"
     let current_editing_node: any;
     let theme: string;
     let current_editing_node_index: any;
+  
     const all_scenes = [bg00, bg01]
    $: code =  "";
   $: scenes = [
     
 ];
+let characters = [
+  {  
+   name: "", id: "null", poses: [{}]
+  }
+]
 
+$: seeing_node = 0;
 
 function updateCurrentBg(newBg: any){
  scenes[seeing].bg = newBg;
  scenes = [...scenes];
 }
-
+let errors = [
+  {
+    code: "0000",
+    name: "test",
+    line: 1
+  }
+]
   let images = [bg00, bg01, logo];
    let fonts = ["font.ttf", "font2.ttf"]
   $: game_logo_xy = {x: 90, y: 10}
@@ -72,14 +88,11 @@ $: assets = [
       {
     title: "no_music",
     file: "N/A"
-        },
-   {
-    title: "love",
-    file: "love.wav"
-}
+        }
 ]
   $: seeing = 0;
   let display = 0;
+    $: current_scene_nodes = scene_nodes[seeing]?.data ?? [];
   let balloon_bg = "pink"
   let balloon_border = "purple"
   let balloon_color = "white"
@@ -109,13 +122,16 @@ let project_name: string;
 
 async function parse_script(code: string){
    const parsed_code = code.split("\n")
+   scenes = [];
+   characters = [];
+   scene_nodes = scene_nodes.map(scene => ({ ...scene, data: [] }));
    var scenes_: any[] = [];
-   var chars_: any[] = [];
+   var chars_: any[] = [ {name: "", id: "null", poses: [{}]}];
 
    for(var i = 0; i < parsed_code.length; i++){
        console.log(parsed_code[i])
        if(parsed_code[i].slice(0, 5) == "scene"){
-          const scene_ = {title: parsed_code[i].split(" ")[1].replace(";", ""), bg: null, id: 0, bgm: ' '}
+          const scene_ = {title: parsed_code[i].split(" ")[1].replace(";", ""), bg: null, id: 0, bgm: 'no_music'}
           scenes_.push(scene_)
        }else if(parsed_code[i].slice(0, 4) == "char"){
          const char_name_ = parsed_code[i].split(" ")[1];
@@ -146,31 +162,77 @@ async function parse_script(code: string){
     );
 
     console.log("Updated scenes inside loop:", scenes_);
-  } else if(parsed_code[i].split("->")[0].split(".")[1] == "say"){
-    const node_scene = parsed_code[i].split("->")[0].split(".")[0];
-    console.log("falar " + node_scene)
-      const node = {
-            scene: scenes[seeing].title,
-            type: thisType,
-            character: character,
-            text: text,
-            options: actionArray,
-            x: (2 * (characters.length + 1)), 
-            y: 20,
-            mood: pose,
-            file: poseFile
-        };
+  }else if(parsed_code[i].split("->")[0].includes("add_pose")) {
+    const add_pose_to = parsed_code[i].split("->")[0].split(".")[0].trim();
+    
+    const parts = parsed_code[i].split("->")[1].trim().split(" ");
+    const pose_name = parts[0];
+    const pose_file = parts[1].replace(";", "").trim();
 
-        if (!Array.isArray(scene_nodes[seeing].data)) {
-            scene_nodes[seeing].data = [];
-        }
+    chars_ = chars_.map(char =>
+        char.id === add_pose_to
+            ? { 
+                ...char, 
+                poses: [...char.poses, { name: pose_name, file: pose_file }] 
+              }
+            : char
+    );
 
-        // Add the node to the current scene
-        scene_nodes[seeing].data = [...scene_nodes[seeing].data, node];
+    console.log(`Added pose ${pose_name} -> ${pose_file} to ${add_pose_to}`);
+    console.log(chars_);
+}
+   else if(parsed_code[i].split("->")[0].includes("say")) {
+    const scene_name = parsed_code[i].split("->")[0].split(".")[0].trim();
 
-  }
+    const textMatch = parsed_code[i].match(/->\s*'([^']+)'/);
+    const text_ = textMatch ? textMatch[1] : "";
+
+    const whoMatch = parsed_code[i].match(/who:\s*([^\s,;]+)/);
+    const poseMatch = parsed_code[i].match(/pose:\s*([^\s,;]+)/);
+    const character = whoMatch ? whoMatch[1] : "";
+    const pose = poseMatch ? poseMatch[1] : "";
+
+   
+let poseFile = "";
+
+// Look through all characters
+for (const char of chars_) {
+    if (!char.poses) continue;
+    const foundPose = char.poses.find(p => p.name === pose);
+    if (foundPose) {
+        poseFile = foundPose.file;
+        break; // stop once we find it
+    }
 }
 
+    // Append to the existing scene data
+    const sceneIndex = scene_nodes.findIndex(scene => scene.id === 1 || scene.data.some(node => node.scene === scene_name));
+    if (sceneIndex !== -1) {
+        scene_nodes[sceneIndex] = {
+            ...scene_nodes[sceneIndex],
+            data: [
+                ...scene_nodes[sceneIndex].data,
+                {
+                    scene: scene_name,
+                    type: "dialogue",
+                    character: character,
+                    text: text_,
+                    options: [],
+                    x: 20,
+                    y: 20,
+                    mood: pose,
+                    file: poseFile
+                }
+            ]
+        };
+    }
+
+    console.log(`Added node '${text_}' to scene ${scene_name}'`);
+    console.log(scene_nodes);
+    console.log(chars_)
+}
+
+  }
 scenes = [...scenes_];
 characters = [...chars_];
 
@@ -252,14 +314,9 @@ let mms = [{
 ]
 
 
-let characters = [
-  {  
-   name: "", id: "null", poses: [{}]
-  }
-]
 
 
-let scene_nodes = [{id: 0 , data: mms}, {id: 1, data: script_code}]
+$: scene_nodes = [{id: 0 , data: mms}, {id: 1, data: script_code}]
 //open add node modal
 function addNode(){
 action = "adding_node";
@@ -323,6 +380,9 @@ async function confirmCharacter(name: string, poses: { file: string; name: strin
 
     characters.push(new_character); 
     code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
+    await   invoke('save_dlt', {
+      projectName: name, code: code
+    })
   }
 }
 
@@ -398,7 +458,7 @@ function confirmEditNode(character, type, text) {
 
 // add new modal to array
 
-function confirmNode(character, type, text, pose, poseFile) {
+async function confirmNode(character, type, text_, pose, poseFile) {
 
     let thisType = '';
 let actionArray: any = []
@@ -418,7 +478,7 @@ let actionArray: any = []
             scene: scenes[seeing].title,
             type: thisType,
             character: character,
-            text: text,
+            text: text_,
             options: actionArray,
             x: (2 * (characters.length + 1)), 
             y: 20,
@@ -436,14 +496,14 @@ let actionArray: any = []
 
         // Add the node to the current scene
         scene_nodes[seeing].data = [...scene_nodes[seeing].data, node];
-
-        console.log('After update:', scene_nodes);
+scene_nodes = [...scene_nodes];
 
         action = null;
         code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
-    }
+   
+ run_dlt(code);
+      }
 
-    $: current_scene_nodes = scene_nodes[seeing].data;
 
 function deleteNode(text: string){
     scene_nodes[seeing].data = scene_nodes[seeing].data.filter((i) => i.text != text);  
@@ -474,19 +534,21 @@ function selectToolbarOption(bundle: any, index: any){
     if(bundle == 1 && index == 2){
         action = "adding_text";
     }
-    if(bundle == 2 && index == 1){
+    // BUILD AND RUN
+    if(bundle == 2 && index == 3){
      let delight_code =  transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio);
   
      let rust_code = transpileToRust(delight_code);
        buildAndRun(project_name, rust_code, delight_code)
     }
+    //BUILD 
     if(bundle == 2 && index == 2){
-      let delight_code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio);
-       code = delight_code;
-      let rust_code = transpileToRust(delight_code);
-      if(project_name){
-      buildAndRun(project_name, rust_code, delight_code)
-    }
+     let delight_code =  transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio);
+  
+}
+  //run 
+ if(bundle == 2 && index == 0){
+    run(project_name);
 }
 }
   function setSeeing(value: any){
@@ -533,7 +595,7 @@ function selectToolbarOption(bundle: any, index: any){
 {/if}
 <div class="main_container {theme}">
    <div class="left_container"> 
- <Assets theme={theme} fonts={fonts} images={assets} scenes={scenes} audio={audio} characters={characters}/>
+ <Assets onAddCharacter={(e) => {e.stopPropagation(); action = "adding_character"} } theme={theme} fonts={fonts} images={assets} scenes={scenes} audio={audio} characters={characters}/>
 {#if scenes.length > 0}
 <Attributes theme={theme} hasBgm={scenes[seeing].bgm != "none"? true : false} audio={audio} onUpdateBg={updateCurrentBg} bind:logo_x={game_logo_xy.x} bind:logo_y={game_logo_xy.y} bind:seeing={seeing} bind:scenes={scenes} bind:current_bg={scenes[seeing].bg} bind:current_logo={game_logo} images={images} bind:menu_buttons={menu_buttons} bind:menu_button_color={menu_button_color} bind:menu_button_size={menu_button_size} currently_inspecting={currently_inspecting} items={items} bind:balloon_bg={balloon_bg} bind:balloon_border={balloon_border} bind:balloon_color={balloon_color} bind:menu_padding_left={menu_padding_left} bind:menu_padding_top={menu_padding_top}/>
 {/if}
@@ -556,7 +618,12 @@ function selectToolbarOption(bundle: any, index: any){
       size="xs"
     />  {/if}
 
-
+{#if scene_nodes[seeing].data[seeing_node] && display == 0}
+<div style="display: flex; align-items: center; gap: 8px; padding: 10px;">
+<Button on:click={() => {seeing_node > 0? seeing_node -= 1 : console.log("")}}>←</Button>
+{seeing_node + 1 } / {scene_nodes[seeing].data.length}</div>
+<Button on:click={() => {seeing_node + 1 < scene_nodes[seeing].data.length ? seeing_node += 1: console.log("")}}>→</Button>
+{/if}
   </div>
 
 {/if}
@@ -596,12 +663,12 @@ function selectToolbarOption(bundle: any, index: any){
     <img  style={`border: ${currently_inspecting == 4 ? '3px solid white' : 'none'}`}   on:click={() => currently_inspecting = 4} class="scene_bg" src={scenes[seeing].bg} alt="scene"/>
 
 {#if seeing != 0}
-{#if scene_nodes[seeing].data[0]}
-<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; height: 50vh; z-index: 1;" src={scene_nodes[seeing].data[0].file}/>
+{#if scene_nodes[seeing].data[seeing_node]}
+<img style="position: absolute; top: 15.6%; left: 70vw; width: 25vw; heght: 50vh; z-index: 1;" src={tempPath + scene_nodes[seeing].data[seeing_node].file}/>
 
 <div on:click={() => currently_inspecting = 1} style="background-color: {balloon_style.bg}; border: {balloon_style.border}" class="balloon"> <div style="background-color: rgba(0,0,0,0.7);">
-    {scene_nodes[seeing].data[0].character}</div>
-     <strong style="color: {balloon_style.color} !important; margin-left: 1%; padding-top: 10px;">{scene_nodes[seeing].data[0].text}</strong> </div>
+    {scene_nodes[seeing].data[seeing_node].character}</div>
+     <strong style="color: {balloon_style.color} !important; margin-left: 1%; padding-top: 10px;">{scene_nodes[seeing].data[seeing_node].text}</strong> </div>
 {/if}
 
 {/if}
@@ -631,9 +698,23 @@ function selectToolbarOption(bundle: any, index: any){
 <div class="scripting">
     
     {#if current_scene_nodes}
-    {#each current_scene_nodes as code, index}
-        <Node onRemove={() => deleteNode(code.text)} onEdit={() => {action = "editing_node"; current_editing_node= code; current_editing_node= index;}} onNodeClick={ handleNodeClick(index * 20)} x={code.x} y={code.y} prop1={code.text} prop2={`${code.character}, ${code.mood}`} prop3={code.type} prop4={code.options}/>
-    {/each}
+   {#each current_scene_nodes as code, index}
+  <Node 
+    onRemove={() => deleteNode(code.text)} 
+    onEdit={() => {
+      action = "editing_node"; 
+      current_editing_node = code; 
+      current_editing_node = index;
+    }} 
+    onNodeClick={ handleNodeClick(index * 20)} 
+    x={index * 2}   
+    y={code.y} 
+    prop1={code.text} 
+    prop2={`${code.character}, ${code.mood}`} 
+    prop3={code.type} 
+    prop4={code.options}
+  />
+{/each}
 {/if}
 <div style="position: absolute;bottom: 30vh; width: 61%; height: 10%;"><strong style="color: white">
     <button on:click={addNode}  style="width: 10%; height: 100%;margin-left: 2vw;">+</button>
@@ -643,14 +724,25 @@ function selectToolbarOption(bundle: any, index: any){
 </div>
 {:else if display == 2}
 <textarea bind:value={code} spellcheck="false" class="code_area"></textarea>
-
+<div  class="terminal_area">
+<textarea class="terminal" spellcheck="false">
+FUCKASS TERMINAL
+</textarea>
+<div class="errors" spellcheck="false">
+ERRORS FOUND: {errors.length}
+{#each errors as error}
+  <p>At line {error.line} : {error.name} ({error.code})</p>
+{/each}
+</div>
+</div>
 {/if}
 
 
 </div>
+{#if display != 2}
 <div class="scenes">
 {#each scenes as scene, index}
-    <div  tabindex="0"  class="scene" role="button"  on:keydown="{(e) => e.key === 'Enter' && setSeeing(index)}"  on:click={() => setSeeing(index)}>
+    <div  tabindex="0"  class="scene" role="button"  on:keydown="{(e) => e.key === 'Enter' && setSeeing(index)}"  on:click={() => {setSeeing(index); console.log(scene_nodes[seeing])}}>
      
         <div style="width: 12vw;position: sticky; background-color: black; color: white;">{scene.title}
 
@@ -662,6 +754,9 @@ function selectToolbarOption(bundle: any, index: any){
 {/each}
 <div on:click={() => action = "adding_scene"} class="scene add">+</div>
 </div>
+{/if}
+
+
 </div>
 </div>
 
@@ -681,7 +776,25 @@ function selectToolbarOption(bundle: any, index: any){
         background-color: rgb(0, 37, 37);   
     color: white;
     }
+    
+    .terminal_area{
+ width: 100%;
+ display: flex;
+        height: 30%;
 
+      
+    }
+.terminal{
+  width: 70%;
+    background-color: black;   
+    color: white;
+    
+}
+.errors{
+  width: 30%;
+  color: white;  
+        background-color: rgb(0, 37, 37);   
+}
 
     
     .switch{

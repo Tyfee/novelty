@@ -89,14 +89,16 @@ div.accordion_item.theme-dark,
 div.accordion_item.theme-dark * {
   color: white !important;
 }
-div.accordion_item.theme-dark:hover,
-div.accordion_item.theme-dark:hover * {
-  background-color: rgb(49, 49, 49) !important;
+div.accordion_item.theme-dark:hover {
+  background-color: rgba(49, 49, 49, 0.582) !important;
 }
 .svelteui-InputWrapper-label{
  color: white ;
 }
-
+.accordion_item.theme-dark .svelteui-AccordionItem-control {
+    color: black !important;
+    background-color: #000000 !important;
+}
 .card.theme-light,
 .card div.theme-light,
 .main_container.theme-light {

@@ -7,6 +7,7 @@ export let scenes
 export let images
 export let fonts
 export let theme: string;
+export let onAddCharacter;
 let open_tabs = [0, 1]
 
 function toggleDisplay(index: any){
@@ -35,7 +36,7 @@ function toggleDisplay(index: any){
         <Accordion.Item   class="accordion_item {theme}" value="packed">
           <div slot="control">Characters</div>
           {#each characters as character, index}
-          <p class="asset">☺ {character.name}</p>
+          <p on:click={character.id == "null" ?  onAddCharacter : console.log("teste")} class="asset"> {character.id == "null" ? "+ Add Character" : "☺ " + character?.name}</p>
           {/each}
         </Accordion.Item>
         <Accordion.Item  class="accordion_item {theme}" value="accessible">
@@ -94,12 +95,10 @@ height: 42vh;
     justify-content: center;
     cursor: pointer;
     }
-    .assets_item:hover{
-box-shadow: inset 500px 500px rgb(0, 68, 48);
-    }
     .asset{
         border: 1px solid black;
         height: 12%;
+        background-color: teal;
         font-weight: bold;
         cursor: pointer;
       

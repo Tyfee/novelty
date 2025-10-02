@@ -4,7 +4,7 @@ let expanded: any = -1;
 let file_options = ["Open Project", "Create new project", "Close this project", "Save", "Save as new project", "Save and close"]
 let add_options = ["Image", "Character","Text", "Node", "new Scene", "New action"];
 let project_options = ["Rebuild", "Inspect"];
-let run_options = ["Try in fullscreen", "Build", "Build and run", "Compile into executable", "Build for Web (HTML)", "Build for Web (WASM)"];
+let run_options = ["Run","Try in fullscreen", "Build", "Build and run", "Compile into executable", "Build for Web (WASM)"];
 let help_options = ["Documentation", "Learn deLIGHT"];
 
 let available_options = [file_options, add_options, run_options, project_options , help_options ]
@@ -55,7 +55,7 @@ function expand(index: any){
 
 .theme-light {
 color: black;
-    background-color: #ffffff; /* Light theme text color */
+    background-color: #ffffff;
   }
 
 .theme-dark {

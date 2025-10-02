@@ -1,5 +1,5 @@
 <script lang="ts">
-        import { NativeSelect, Text, Textarea, Button } from '@svelteuidev/core';
+    import { NativeSelect, Text, Textarea, Button } from '@svelteuidev/core';
 export let available_characters: any
 let value: any;
 let text: string = '';
@@ -10,13 +10,12 @@ $: pose = "";
 export let onClose: any;
 export let onConfirm: any;
 
-
 let character_map = available_characters.map((i: any) => i.name);
 let selected = character_map[0];
-
+handleChange();
 function handleChange() {
   const thisCharacter = available_characters.find(c => c.name === selected);
-  poses = thisCharacter?.poses ?? [];
+  poses = thisCharacter?.poses.filter(p => p.name && p.file) ?? [];
 
   if (poses.length > 0) {
     pose = poses[0].file;
@@ -24,10 +23,7 @@ function handleChange() {
     pose = "";
   }
 }
-
-
 </script>
-
 
 <div>
 <div class="modal">
@@ -42,7 +38,7 @@ on:change={handleChange}
 </p>
 <div style="display: flex; width: 100%;">
 {#if pose}
-  <img width="140px" src={pose} alt="pose"/>
+  <img width="140px" src={`/src/assets/temp_poses/${pose}`} alt="pose"/>
 {/if}
 <NativeSelect
   data={poses.map(p => ({ label: p.name, value: p.file }))}  
@@ -56,7 +52,7 @@ on:change={handleChange}
     data={["Dialogue", "Multiple Choice", "Action"]}
     bind:value={action_type}
     label="Node Type"
-/>
+  />
 </p>
 {#if action_type == "Dialogue"}
 <p></p>
@@ -68,8 +64,6 @@ on:change={handleChange}
 {/if}
 
 {#if action_type == "Multiple Choice"}
-
-
 <p></p>
 <Textarea
   placeholder="Hello"
@@ -83,7 +77,6 @@ on:change={handleChange}
   bind:value={text2}
 />
 {/if}
-
 
 {#if action_type == "Action"}
 <p></p>
@@ -112,5 +105,3 @@ onConfirm(selected, action_type, text, poseObj?.name, poseObj?.file);
 </div>
 </div>
 </div>
-
-

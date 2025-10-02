@@ -23,14 +23,19 @@ scenes.map((i) => source_code = source_code + "bg " + `'${i.bg.split("/").pop()}
 source_code = source_code + "\n";
 characters.map((i) =>{i.id !== "null" ? source_code = source_code + "char " + i.name + " " + i.id + ";\n": "\n"} );
 characters.forEach(c => {
-  
-{c.id !== "null" ?  c.poses.forEach(p => {
-    const file_name = p.file.split("/").pop();
+    if (c.id === "null") {
+        console.log("Skipping null character");
+        return; 
+    }
 
-    source_code += `${c.id}.add_pose -> ${p.name} ${file_name};\n`;
-  }) : console.log("Null")}
-}
-);
+    c.poses.forEach(p => {
+        if (!p.file) return;
+
+        const file_name = p.file.split("/").pop();
+        source_code += `${c.id}.add_pose -> ${p.name} ${file_name};\n`;
+    });
+});
+
 
 
 source_code = source_code + "\n";
@@ -52,7 +57,7 @@ for(var i = 0; i < scenes.length; i++){
 
 //music stuff
 for(var m = 0; m < scenes.length; m++){
-  if(scenes[m].bgm != 'no_music'){
+  if(scenes[m].bgm != 'no_music' || scenes[m].bgm?.length < 1){
   source_code = source_code + "\n" + `${scenes[m].title}.play_bgm -> '${scenes[m].bgm}'; \n`
   }}
 
@@ -72,7 +77,7 @@ for(var m = 0; m < scenes.length; m++){
 for(var t = 0; t < text.length; t++ ){
 
   source_code = source_code + "\n" + `${text[t].scene}.write -> '${text[t].value}'` + `, x: ${text[t].x}, y: ${text[t].y}, color: ${text[t].color}, size: ${text[t].font_size}; \n` ;
-console.log("ookiku good luck and goodbye")
+
   console.log(text[t])
 
 }

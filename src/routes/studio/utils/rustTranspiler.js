@@ -115,14 +115,13 @@ if(parsed[i].includes("char")){
 
 }
 if(parsed[i].includes("add_pose")){
-  total_images.push(thisLine[2]);
 
+  total_images.push(thisLine[2]);
 user_define = user_define + `
 \nlet ${thisLine[2]}: Texture2D = load_texture(\"assets/characters/${thisLine[0].split(".")[0]}/poses/${thisLine[3]}\").await.unwrap();
 `
 }
 
-console.log("all theh scenes: "+ total_scenes)
 
  if (parsed[i].includes(".say ->")) {
     let preparse = parsed[i];  
@@ -133,6 +132,7 @@ console.log("all theh scenes: "+ total_scenes)
       let scene_name = full_parse[0].trim();  
       let text = full_parse[1].trim();  
      let mood = full_parse[2].substring(1).trim().split(',')[1].split(':')[1]
+     console.log(full_parse[2])
      let character = full_parse[2].substring(1).trim().split(',')[0].split(':')[1]
    
      scene_name = scene_name.replace(/[^\w\s]/g, '');  
@@ -204,7 +204,6 @@ sceneData.forEach((s, i) => {
   user_define += `\nlet ${s.name}_texture: Texture2D = load_texture("assets/scenes/${s.bg}").await.unwrap();\n`;
 });
   
-  console.log(functions)
   //every action will be turned into rust code here. including the whole rendering pipeline.
   
 
@@ -227,16 +226,14 @@ sceneData.forEach((s, i) => {
   
         //check for functions corresponding to the current scene
   for(var j = 0; j < functions.length; j++){
-    console.log(functions[j])
+  
     //if found use if/else to define what to do at what function 'draw', 'draw_background', 'write', 'etc'
   
     if(functions[j].scene == total_scenes[i]){
-  console.log(functions[j].scene + " and " + total_scenes[i])
   
    
   if(functions[j].method.trim() == "play_bgm"){
     
-    console.log(functions[j].params + "playing")
     user_loop = user_loop + `\n
            if !music_playing {
             play_sound(&${functions[j].params.replace(/'/g, '').trim()}, PlaySoundParams {
@@ -253,19 +250,18 @@ sceneData.forEach((s, i) => {
 
   if (functions[j].method.trim() == "draw_background") {
         
-        console.log("drawing_bg...")
         user_loop += `draw_texture_ex(&${sceneData[i].name}_texture, 0., 0., WHITE, DrawTextureParams {
             dest_size: Some(vec2(screen_width(), screen_height())),
             ..Default::default()
         });\n`;
         }else if (functions[j].method.trim().includes("write")){
           var parsed_text_params = functions[j].params.trim().replace(/'/g, '"').split(',');
-          console.log(parsed_text_params)
+         
           user_loop = user_loop + `\n \n draw_text(${parsed_text_params[0]}, ${parsed_text_params[1].replace(/[^0-9]/g, '')}.0 * (screen_width() / 1000.0),   ${parsed_text_params[2].replace(/[^0-9]/g, '')}.0 * (screen_height() / 500.0),   ${parsed_text_params[4].replace(/[^0-9]/g, '')}.0 * (screen_width().min(screen_height()) / 100.0), ${parsed_text_params[3].replace('color:', '').toUpperCase()}); \n`
         }else if (functions[j].method.trim() == "draw"){
           
           var parsed_text_params = functions[j].params.trim().replace(/'/g, ' ').split(',');
-          console.log(parsed_text_params[0])
+      
           const parsed_x = parsed_text_params[1].split(":")
           const parsed_y = parsed_text_params[2].split(":")
           const parsed_w = parsed_text_params[3].split(":")
@@ -281,10 +277,8 @@ sceneData.forEach((s, i) => {
         
         var who = functions[j].params.trim().split(', ')
         var actually_Who = who[2].split(":")
-        console.log("this is who ")
-        console.log(actually_Who)
         var parsed_text_params = functions[j].params.trim().replace(/'/g, ' ').split(',');
-        user_loop = user_loop + `\n \n draw_texture_ex(&${actually_Who[1]}, screen_width() / 1.7, screen_height() / 6.0, WHITE,   DrawTextureParams {
+        user_loop = user_loop + `\n \n draw_texture_ex(&${total_scenes[i]}_moods[${total_scenes[i]}_index], screen_width() / 1.7, screen_height() / 6.0, WHITE,   DrawTextureParams {
           dest_size: Some(vec2(screen_width() / 2.2, screen_height() / 1.2)),
           ..Default::default()
         },); \n`  
@@ -310,13 +304,13 @@ for (let i = 0; i < total_scenes.length; i++) {
   let characters = character_data[scene_name] || [];
 
 let formatted_texts = texts.map(text => `"${text.replace(/"/g, '\\"')}".to_string()`).join(", ");
-let formatted_moods = moods.map(mood => `"${mood.replace(/"/g, '\\"')}".to_string()`).join(", ");
+let formatted_moods = moods.map(mood => `&${mood}`).join(", ");
 let formatted_characters = characters.map(character => `"${character.replace(/"/g, '\\"')}".to_string()`).join(", ");
 
 
   let array_declaration = `let ${scene_name}_nodes: Vec<String> = vec![${formatted_texts}];\n`;
-  let mood_declaration = `let ${scene_name}_moods: Vec<String> = vec![${formatted_moods}];\n`;
-  let character_declaration = `let ${scene_name}_characters: Vec<String> = vec![${formatted_characters}];\n`;
+let mood_declaration = `let ${scene_name}_moods: Vec<&Texture2D> = vec![${formatted_moods}];\n`;
+ let character_declaration = `let ${scene_name}_characters: Vec<String> = vec![${formatted_characters}];\n`;
   
   user_define += array_declaration;
   

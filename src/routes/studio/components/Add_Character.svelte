@@ -70,11 +70,11 @@ bind:value={name}
 {#if poses.length < 1}
 <h1>Nenhuma pose adicionada.</h1>
 {/if}
-{#each poses as bg, index (bg.file)}
+{#each poses as pose, index (pose.file)}
   <div style="display: flex; align-items: center; gap: 1rem;">
     <img
-      src={bg?.file}
-      alt={bg.name}
+      src={pose?.file}
+      alt={pose.name}
       width="160px"
       style="cursor: pointer; border: {index === selected ? '2px solid green' : 'none'}"
       on:click={() => selected = index}
@@ -82,7 +82,7 @@ bind:value={name}
     <TextInput
       placeholder="Something like 'Neutral', Angry or Sad;"
       label="Pose title"
-      bind:value={bg.name}
+      bind:value={pose.name}
     />
   </div>
 {/each}
