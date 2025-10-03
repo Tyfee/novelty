@@ -73,6 +73,7 @@ if(parsed[i].includes("window_title")){
   use macroquad::prelude::*;
   \nuse macroquad::audio;
   \nuse macroquad::audio::play_sound;
+  \nuse macroquad::audio::stop_sound;
   
 \nuse macroquad::audio::PlaySoundParams;
 fn window_conf() -> Conf {
@@ -164,7 +165,7 @@ user_define = user_define + `
   
   if(parsed[i].includes("audio")){
     total_audio.push(thisLine[1].replace("'", ""));
-  user_define = user_define + `\nlet ${thisLine[1]} = audio::load_sound(\"assets/audio/${thisLine[1]}.ogg\").await.unwrap();\n`
+  user_define = user_define + `\nlet ${thisLine[1]} = audio::load_sound(\"assets/audio/${thisLine[2]}\").await.unwrap();\n`
   
   }
   
@@ -191,6 +192,9 @@ user_define = user_define + `
   if(total_images.length > 0){
    user_define += `\nlet bg = [${total_images.map(s => `"${s}"`).join(", ")}];\n`;
   }
+   if(total_audio.length > 0){
+   user_define += `\nlet bgm = [${total_audio.map(s => `"${s}"`).join(", ")}];\n`;
+  }
   user_define = user_define + `\nlet mut current_scene = 0; \n`
   
   user_define = user_define + `\nlet mut whos_talking = "Guy"; \n`
@@ -214,6 +218,7 @@ sceneData.forEach((s, i) => {
         
         current_scene = 1;
 
+
         \n}`
 
         if(i != 0){
@@ -232,19 +237,7 @@ sceneData.forEach((s, i) => {
     if(functions[j].scene == total_scenes[i]){
   
    
-  if(functions[j].method.trim() == "play_bgm"){
-    
-    user_loop = user_loop + `\n
-           if !music_playing {
-            play_sound(&${functions[j].params.replace(/'/g, '').trim()}, PlaySoundParams {
-                looped: true, // Ensure the music loops continuously
-                ..PlaySoundParams::default()
-            });
-            music_playing = true; // Update the flag to indicate music is playing
-        }
 
-  `
-  }
 
 
 
@@ -254,7 +247,24 @@ sceneData.forEach((s, i) => {
             dest_size: Some(vec2(screen_width(), screen_height())),
             ..Default::default()
         });\n`;
-        }else if (functions[j].method.trim().includes("write")){
+        }else   if(functions[j].method.trim() == "play_bgm"){
+    user_loop += `\n
+           if !music_playing {
+            play_sound(&${functions[j].params.replace(/'/g, '').trim()}, PlaySoundParams {
+                looped: true, // Ensure the music loops continuously
+                ..PlaySoundParams::default()
+            });
+            \nmusic_playing = true; 
+        }
+
+        \n if music_playing && is_key_down(KeyCode::Right){
+          stop_sound(&${functions[j].params.replace(/'/g, '').trim()});
+        }
+
+  `
+  }
+        
+        else if (functions[j].method.trim().includes("write")){
           var parsed_text_params = functions[j].params.trim().replace(/'/g, '"').split(',');
          
           user_loop = user_loop + `\n \n draw_text(${parsed_text_params[0]}, ${parsed_text_params[1].replace(/[^0-9]/g, '')}.0 * (screen_width() / 1000.0),   ${parsed_text_params[2].replace(/[^0-9]/g, '')}.0 * (screen_height() / 500.0),   ${parsed_text_params[4].replace(/[^0-9]/g, '')}.0 * (screen_width().min(screen_height()) / 100.0), ${parsed_text_params[3].replace('color:', '').toUpperCase()}); \n`

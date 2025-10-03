@@ -10,6 +10,7 @@
   import Add_Node from '../components/Add_Node.svelte'
   import EditNode from "../components/Edit_Node.svelte";
   import Add_Scene from '../components/Add_Scene.svelte'
+  import Add_Audio from '../components/Add_Audio.svelte'
   import AddText from "../components/Add_Text.svelte";
   import bg00 from '../../../assets/bg/BG02.png'
   import bg01 from '../../../assets/bg/bg01.png'
@@ -30,8 +31,6 @@ import build from "../utils/build";
     import transpileToRust from "../utils/rustTranspiler";
     import toast, { Toaster } from 'svelte-french-toast';
     import { event } from '@tauri-apps/api';
-
-
   const tempPath = `/src/assets/temp_poses/`;
 
   let path = "C:\\Novelty\\"
@@ -55,6 +54,13 @@ $: seeing_node = 0;
 function updateCurrentBg(newBg: any){
  scenes[seeing].bg = newBg;
  scenes = [...scenes];
+}
+
+
+function updateCurrentBgM(newBgm: any){
+ scenes[seeing].bgm = newBgm;
+ console.log(scenes[seeing])
+
 }
 let errors = [
   {
@@ -87,7 +93,8 @@ $: assets = [
   let audio: any = [
       {
     title: "no_music",
-    file: "N/A"
+    path: "N/A",
+    filename: ""
         }
 ]
   $: seeing = 0;
@@ -126,6 +133,7 @@ async function parse_script(code: string){
    characters = [];
    scene_nodes = scene_nodes.map(scene => ({ ...scene, data: [] }));
    var scenes_: any[] = [];
+   var audio_: any[] =  [{title: "no_music", path: "null", filename: ""}];
    var chars_: any[] = [ {name: "", id: "null", poses: [{}]}];
 
    for(var i = 0; i < parsed_code.length; i++){
@@ -230,18 +238,43 @@ for (const char of chars_) {
     console.log(`Added node '${text_}' to scene ${scene_name}'`);
     console.log(scene_nodes);
     console.log(chars_)
+}else if(parsed_code[i].slice(0, 5) === "audio") {
+  const title = parsed_code[i].split(" ")[1];
+  const filename = parsed_code[i].split(" ")[2].replace(/;/g, "");
+  const path = "C:\\Users\\Thalison\\Documents\\novelty\\src\\assets\\audio\\test.wav";
+
+  const exists = audio.some(a => a.filename === filename);
+  if (!exists) {
+    audio.push({ title, path, filename });
+    console.log("Added audio:", filename);
+  } else {
+    console.log("Audio already exists:", filename);
+  }
 }
+
+  else if(parsed_code[i].split("->")[0].includes("play_bgm")){
+
+    const play_on = parsed_code[i].split("->")[0].split(".")[0].trim();
+    const bgm = parsed_code[i].split("->")[1].replace(";","").trim();
+    scenes_ = scenes_.map(scene =>
+      scene.title.trim() === play_on
+        ? { ...scene, bgm: bgm }
+        : scene
+    );
 
   }
 scenes = [...scenes_];
 characters = [...chars_];
 
 }
+}
 
-async function run_dlt(code_: string){
+async function run_dlt(){
+     code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
+  
   parse_script(code);
    await invoke('save_dlt', {
-      projectName: project_name, code: code_
+      projectName: project_name, code: code
     }).then(()=> {
       
       toast.success("Código executado com sucesso!")
@@ -286,7 +319,7 @@ setWindowTitle('current_project.nvl*');
     slide_from: menu_padding_left,
     font_size: menu_button_size
   };
-  let action: any = null;
+  let action: any = "adding_sound";
   //0 scene, 1 dialog, 2 main menu
   let currently_inspecting = 2;
  const currentUrl = window.location.pathname; 
@@ -322,6 +355,30 @@ function addNode(){
 action = "adding_node";
 }
 
+
+async function confirmAudio(path: string, name: string, filename: string){
+ const new_audio = {
+ 
+    title: name,
+    path: path,
+    filename: filename
+ };
+
+    await invoke("import_audio", {
+      projectName: project_name,
+      name: name,
+      filePath: path
+    }).then((data) => {
+      console.log(data)
+    });
+
+    audio = [...audio, new_audio];
+      code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
+    await   invoke('save_dlt', {
+      projectName: name, code: code
+    })
+    action = null;
+}
 //add new scene to array
 function confirmScene(text: string, background: any){
 
@@ -329,7 +386,7 @@ function confirmScene(text: string, background: any){
         title: text,
         bg: background,
         id: Math.floor(Math.random() * 539),
-        bgm: 'No Music'
+        bgm: "no_music"
     }
     scenes = [...scenes, new_scene]
     code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
@@ -501,7 +558,7 @@ scene_nodes = [...scene_nodes];
         action = null;
         code = transpileToScript(project_name, scenes, characters, assets, scene_nodes, main_menu_info, text, audio)
    
- run_dlt(code);
+ run_dlt();
       }
 
 
@@ -533,6 +590,9 @@ function selectToolbarOption(bundle: any, index: any){
     }
     if(bundle == 1 && index == 2){
         action = "adding_text";
+    }
+        if(bundle == 1 && index == 3){
+        action = "adding_sound";
     }
     // BUILD AND RUN
     if(bundle == 2 && index == 3){
@@ -587,6 +647,10 @@ function selectToolbarOption(bundle: any, index: any){
 {#if action == "adding_scene"}
 <AddScene onConfirm={confirmScene} onClose={() => action = null} available_bg={all_scenes}/>
 {/if}
+
+{#if action == "adding_sound"}
+<Add_Audio onConfirm={confirmAudio} onClose={() => action = null} available_bg={all_scenes}/>
+{/if}
 {#if action == "adding_character"}
 <AddCharacter  onConfirm={confirmCharacter} onClose={() => action = null}/>
 {/if}
@@ -611,11 +675,12 @@ function selectToolbarOption(bundle: any, index: any){
  
  {#if scenes.length > 0}   <span>♫</span>
     <NativeSelect
-      data={audio.map(track => ({ label: track.title, value: track.file }))}
+      data={audio.map(track => ({ label: track.title, value: track.title }))}
       placeholder="Pick one"
-      bind:value={scenes[seeing].bgm}
       label=""
+      bind:value={scenes[seeing].bgm}
       size="xs"
+        on:change={(e) => updateCurrentBgM(e.currentTarget.value)}
     />  {/if}
 
 {#if scene_nodes[seeing].data[seeing_node] && display == 0}
@@ -631,7 +696,7 @@ function selectToolbarOption(bundle: any, index: any){
     {#if display == 2}
 <div style="display: flex; align-items: center; gap: 8px; padding: 10px;">
  <Button color={'green'} on:click={() => 
-  run_dlt(code)
+  run_dlt()
   } ripple>
   Run Code
 </Button>

@@ -330,6 +330,36 @@ async fn create_character(
 
     Ok(())
 }
+#[tauri::command]
+async fn import_audio(
+    project_name: String,
+    name: String,
+    file_path: String
+) -> Result<String, String> {
+    use std::fs;
+    use std::path::{Path, PathBuf};
+
+    let mut base_path = PathBuf::from("C:\\Novelty\\Projects");
+    base_path.push(&project_name);
+    base_path.push("assets");
+    base_path.push("audio");
+
+    let file_origin = PathBuf::from(&file_path);
+    let extension = file_origin.extension().unwrap_or_default();
+    let dest_path = base_path.join(format!("{}.{}", name, extension.to_string_lossy()));
+
+    if let Some(parent) = dest_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create folder {:?}: {}", parent, e))?;
+    }
+
+    fs::copy(&file_origin, &dest_path)
+        .map_err(|e| format!("Failed to copy {:?} to {:?}: {}", file_origin, dest_path, e))?;
+
+    Ok(format!("Copied {:?} to {:?}", file_origin, dest_path))
+}
+
+
 
 
 
@@ -425,6 +455,7 @@ fn main() {
          open_image,
           open_project, 
           create_character,
+          import_audio,
           copy_to_temp,
           remove_temp_file,
           save_dlt,

@@ -44,7 +44,7 @@ assets.map((i) => source_code = source_code + "img " + i.title + ";\n");
 
 audio.map((i) => {
   if(i.title != "no_music"){
-  source_code = source_code + "audio " + i.title + ";\n"
+  source_code = source_code + "audio " + i.title + " " + i.filename + ";\n"
 }
   else{
 
@@ -57,8 +57,10 @@ for(var i = 0; i < scenes.length; i++){
 
 //music stuff
 for(var m = 0; m < scenes.length; m++){
+
   if(scenes[m].bgm != 'no_music' || scenes[m].bgm?.length < 1){
-  source_code = source_code + "\n" + `${scenes[m].title}.play_bgm -> '${scenes[m].bgm}'; \n`
+   
+  source_code = source_code + "\n" + `${scenes[m].title}.play_bgm -> ${scenes[m].bgm}; \n`
   }}
 
 

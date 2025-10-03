@@ -10,7 +10,7 @@
  import test from '../../../assets/audio/test.wav'
  export let onNodeClick: any; 
 
-import WaveSurfer from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js'
+import WaveSurfer from 'wavesurfer.js'
     import { onMount } from 'svelte';
 let waveform:  HTMLDivElement;
 onMount(() => {
